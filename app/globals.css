@@ -500,6 +500,25 @@ html[data-style="institucional"] .progress__bar { background: rgba(255,255,255,.
 }
 .result__svc svg { width: 18px; height: 18px; color: var(--primary); }
 
+/* "No califica" — tono cálido y empático (sin alarma) */
+.result--denied .result__badge {
+  background: var(--accent-soft); color: var(--accent);
+  animation: pop .55s cubic-bezier(.2,1.4,.4,1) both, heartBeat 2.4s ease-in-out .6s infinite;
+}
+.result--denied .result__sub { color: var(--ink); }
+.result__countdown {
+  width: 240px; max-width: 74%; height: 6px; border-radius: 999px;
+  background: var(--line-strong); overflow: hidden; margin-top: 6px;
+}
+.result__countdown span {
+  display: block; height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  animation: countdown 8s linear forwards;
+}
+@keyframes countdown { from { width: 0%; } to { width: 100%; } }
+@keyframes heartBeat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.07); } }
+.result__redirect { font-size: 13px; color: var(--ink-faint); margin-top: -2px; }
+
 /* confetti */
 .confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .confetti i { position: absolute; top: -14px; width: 9px; height: 14px; opacity: .9; animation: fall linear forwards; }
@@ -683,7 +702,8 @@ html[data-style="institucional"] .btn--ghost:hover { color: #fff; }
 @media (prefers-reduced-motion: reduce) {
   .stage__track { transition: none; }
   .slide-anim { animation: none; }
-  .result__badge { animation: none; }
+  .result__badge,
+  .result--denied .result__badge { animation: none; }
   .confetti { display: none; }
   .video__sound { animation: none; }
   .progress__bar span, .progress__line span, .progress__dot { transition: none; }

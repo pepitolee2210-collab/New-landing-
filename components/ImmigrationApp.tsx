@@ -105,6 +105,14 @@ export default function ImmigrationApp() {
     setIdx(0);
   }
 
+  // Tras un "no califica": vuelve a la lista de servicios para elegir otro.
+  const goToServices = useCallback(() => {
+    setServiceId(null);
+    setAnswers({});
+    setVideoDone(false);
+    setIdx(1);
+  }, []);
+
   // Navegación con teclado.
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
@@ -185,7 +193,13 @@ export default function ImmigrationApp() {
                     />
                   )}
                   {sl.type === "result" && service && result && (
-                    <ResultSlide service={service} result={result} onRestart={restart} />
+                    <ResultSlide
+                      service={service}
+                      result={result}
+                      isActive={cur?.type === "result"}
+                      onRestart={restart}
+                      onTryOthers={goToServices}
+                    />
                   )}
                 </div>
               </section>

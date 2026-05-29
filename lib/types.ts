@@ -2,7 +2,7 @@
    UsaLatinoPrime — Tipos del dominio
    ============================================================ */
 
-export type Tone = "success" | "urgent" | "contact";
+export type Tone = "success" | "urgent" | "contact" | "denied";
 
 export type QuestionKind = "yesno" | "choice" | "checklist";
 

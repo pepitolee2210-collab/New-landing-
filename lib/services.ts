@@ -42,10 +42,12 @@ export const SERVICES: Service[] = [
       { id: "abandono", kind: "yesno", text: "¿Ha sufrido abuso, abandono o negligencia por parte de uno o ambos padres?" },
     ],
     evaluate(a: Answers): ResultData {
-      const ok = a.enUSA === "si" && a.menor21 === "si" && a.abandono === "si";
+      // Califica únicamente si está en EE.UU. y es menor de 21 (la pregunta de
+      // abuso/abandono no descalifica). En cualquier otro caso, no califica.
+      const ok = a.enUSA === "si" && a.menor21 === "si";
       return ok
-        ? { tone: "success", message: "El menor cumple los tres requisitos básicos de la Visa Juvenil (SIJS)." }
-        : { tone: "contact", message: "Tu caso necesita una revisión más detallada. Escríbenos y un asesor lo evalúa contigo sin costo." };
+        ? { tone: "success", message: "El menor cumple los requisitos básicos de la Visa Juvenil (SIJS)." }
+        : { tone: "denied", message: "Según los datos que recibimos, lamentablemente no puedes calificar para el servicio de Visa Juvenil." };
     },
   },
   {
