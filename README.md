@@ -35,7 +35,7 @@ Copia `.env.example` a `.env.local` (o configúralas en Vercel):
 
 | Variable | Descripción | Valor por defecto |
 | --- | --- | --- |
-| `NEXT_PUBLIC_WHATSAPP` | Número de WhatsApp del negocio (con código de país) | `+1 (385) 456-4470` |
+| `NEXT_PUBLIC_WHATSAPP` | Número de WhatsApp del negocio (con código de país) | `+1 (402) 824-8171` |
 | `NEXT_PUBLIC_VIDEO_URL` | Ruta del video demo dentro de `/public` | `/videos/demo.mp4` |
 | `NEXT_PUBLIC_VIDEO_POSTER` | Imagen de portada del video (opcional) | _(vacío)_ |
 

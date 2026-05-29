@@ -5,7 +5,7 @@
 - [x] Portar diseño (HTML/JSX prototipo) a componentes TSX tipados
 - [x] Sistema de estilos con tema **moderno** fijo (sin panel de tweaks de diseño)
 - [x] Tipografías con next/font (Source Sans 3 / Source Serif 4)
-- [x] WhatsApp configurable (`NEXT_PUBLIC_WHATSAPP`, default +1 385 456-4470)
+- [x] WhatsApp configurable (`NEXT_PUBLIC_WHATSAPP`, default +1 402 824-8171)
 - [x] Video como archivo local con fallback a placeholder
 - [x] **Rediseño móvil**: app-shell 100dvh, safe-areas, nav inferior, progreso compacto,
       hero reorganizado, servicios 1 columna, touch targets ≥52px, reduce-motion

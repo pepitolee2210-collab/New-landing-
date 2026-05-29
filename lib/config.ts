@@ -4,7 +4,7 @@
    (con fallback a los valores reales del negocio).
    ============================================================ */
 
-const RAW_WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP ?? "+1 (385) 456-4470";
+const RAW_WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP ?? "+1 (402) 824-8171";
 
 /** Número tal cual para mostrar en pantalla. */
 export const WHATSAPP_DISPLAY = RAW_WHATSAPP;
