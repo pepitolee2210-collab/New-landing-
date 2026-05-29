@@ -39,7 +39,8 @@ export default function ServicesSlide({ services, onPick, selected }: ServicesSl
               <span className="svc-card__name">{s.name}</span>
               <span className="svc-card__desc">{s.desc}</span>
               <span className="svc-card__cta">
-                {isSelected ? "Seleccionado" : "Calificar ahora"} {Ico.arrow}
+                <span className="svc-card__cta-text">{isSelected ? "Seleccionado" : "Calificar ahora"}</span>
+                {Ico.arrow}
               </span>
             </button>
           );
