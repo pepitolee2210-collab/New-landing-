@@ -1,10 +1,12 @@
 /* ============================================================
    UsaLatinoPrime — Configuración del sitio
-   Valores sensibles/ajustables vía variables de entorno
-   (con fallback a los valores reales del negocio).
    ============================================================ */
 
-const RAW_WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP ?? "+1 (402) 824-8171";
+// Número general de WhatsApp: lo usan TODOS los servicios excepto
+// Apelación y Reforzar Asilo (que definen el suyo en lib/services.ts).
+// Se define en código (no por variable de entorno) para que ninguna
+// configuración de Vercel pueda sobrescribirlo.
+const RAW_WHATSAPP = "+1 (402) 824-8171";
 
 /** Número tal cual para mostrar en pantalla. */
 export const WHATSAPP_DISPLAY = RAW_WHATSAPP;
@@ -12,11 +14,7 @@ export const WHATSAPP_DISPLAY = RAW_WHATSAPP;
 /** Sólo dígitos, para construir enlaces https://wa.me/<digits>. */
 export const WHATSAPP_DIGITS = RAW_WHATSAPP.replace(/[^0-9]/g, "");
 
-/**
- * Video de fallback general (cuando un servicio no define el suyo).
- * Vacío por defecto: cada servicio ya trae su propio video, así que no
- * intentamos cargar un archivo inexistente.
- */
+/** Video de fallback general (cuando un servicio no define el suyo). */
 export const VIDEO_URL = process.env.NEXT_PUBLIC_VIDEO_URL ?? "";
 
 /** Imagen de portada opcional del video. */
@@ -40,6 +38,7 @@ export const HERO_LEAD =
 
 /**
  * Construye el enlace de WhatsApp con un mensaje pre-redactado.
+ * Si se pasa `digits`, usa ese número; si no, el general.
  */
 export function waLink(message: string, digits: string = WHATSAPP_DIGITS): string {
   const target = digits || WHATSAPP_DIGITS;
