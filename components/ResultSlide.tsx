@@ -87,7 +87,7 @@ export default function ResultSlide({ service, result, isActive, onRestart, onTr
         <SvgIcon name={service.icon} /> {service.name}
       </div>
       <p className="result__msg">{result.message}</p>
-      <a className="btn btn--wa" href={waLink(message)} target="_blank" rel="noopener noreferrer">
+      <a className="btn btn--wa" href={waLink(message, service.whatsappDigits)} target="_blank" rel="noopener noreferrer">
         {Ico.whatsapp} {isWin ? "Agendar por WhatsApp" : "Escribirnos por WhatsApp"}
       </a>
       <button type="button" className="btn btn--ghost" onClick={onRestart}>

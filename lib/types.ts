@@ -43,6 +43,8 @@ export interface Service {
   desc: string;
   /** Ruta del video específico del servicio (en /public). Opcional. */
   video?: string;
+  /** WhatsApp propio del servicio (solo dígitos). Si se omite, usa el número general. */
+  whatsappDigits?: string;
   questions: Question[];
   evaluate: (answers: Answers, service: Service) => ResultData;
 }

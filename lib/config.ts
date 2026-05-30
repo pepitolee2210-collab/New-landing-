@@ -41,6 +41,7 @@ export const HERO_LEAD =
 /**
  * Construye el enlace de WhatsApp con un mensaje pre-redactado.
  */
-export function waLink(message: string): string {
-  return `https://wa.me/${WHATSAPP_DIGITS}?text=${encodeURIComponent(message)}`;
+export function waLink(message: string, digits: string = WHATSAPP_DIGITS): string {
+  const target = digits || WHATSAPP_DIGITS;
+  return `https://wa.me/${target}?text=${encodeURIComponent(message)}`;
 }
