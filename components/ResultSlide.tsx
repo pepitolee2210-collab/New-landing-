@@ -8,6 +8,7 @@ import { useEffect } from "react";
 import { waLink } from "@/lib/config";
 import type { ResultData, Service } from "@/lib/types";
 import Confetti from "./Confetti";
+import SocialProof from "./SocialProof";
 import { Ico, SvgIcon } from "./icons";
 
 interface ResultSlideProps {
@@ -87,6 +88,7 @@ export default function ResultSlide({ service, result, isActive, onRestart, onTr
         <SvgIcon name={service.icon} /> {service.name}
       </div>
       <p className="result__msg">{result.message}</p>
+      {isWin && <SocialProof />}
       <a className="btn btn--wa" href={waLink(message, service.whatsappDigits)} target="_blank" rel="noopener noreferrer">
         {Ico.whatsapp} {isWin ? "Agendar por WhatsApp" : "Escribirnos por WhatsApp"}
       </a>
