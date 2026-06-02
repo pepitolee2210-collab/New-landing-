@@ -2,8 +2,7 @@
    UsaLatinoPrime — Configuración del sitio
    ============================================================ */
 
-// Número general de WhatsApp: lo usan TODOS los servicios excepto
-// Apelación y Reforzar Asilo (que definen el suyo en lib/services.ts).
+// Número general de WhatsApp: lo usan TODOS los servicios.
 // Se define en código (no por variable de entorno) para que ninguna
 // configuración de Vercel pueda sobrescribirlo.
 const RAW_WHATSAPP = "+1 (402) 824-8171";
