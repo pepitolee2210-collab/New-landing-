@@ -16,17 +16,48 @@ const sourceSerif = Source_Serif_4({
   display: "swap",
 });
 
+const SITE_NAME = "USA Latino Prime";
+const SITE_TITLE = "UsaLatinoPrime — Evaluación migratoria gratuita";
+const SITE_DESCRIPTION =
+  "Lleva tu propio trámite migratorio desde el celular, paso a paso, con validación automática y nuestro equipo a tu lado. Descubre si calificas en minutos.";
+const SHARE_DESCRIPTION =
+  "Descubre si calificas para tu trámite migratorio en minutos, desde tu celular.";
+const SHARE_IMAGE = "/og-image.jpg";
+
+// URL pública del sitio. Permite override manual; si no, usa el dominio de
+// producción que Vercel inyecta automáticamente; en local cae a localhost.
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : "http://localhost:3000");
+
 export const metadata: Metadata = {
-  title: "UsaLatinoPrime — Evaluación migratoria gratuita",
-  description:
-    "Lleva tu propio trámite migratorio desde el celular, paso a paso, con validación automática y nuestro equipo a tu lado. Descubre si calificas en minutos.",
+  metadataBase: new URL(SITE_URL),
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
   icons: { icon: "/logo.png", apple: "/logo.png" },
   openGraph: {
-    title: "UsaLatinoPrime — Evaluación migratoria gratuita",
-    description:
-      "Descubre si calificas para tu trámite migratorio en minutos, desde tu celular.",
+    title: SITE_TITLE,
+    description: SHARE_DESCRIPTION,
     type: "website",
     locale: "es_US",
+    siteName: SITE_NAME,
+    url: "/",
+    images: [
+      {
+        url: SHARE_IMAGE,
+        width: 1600,
+        height: 902,
+        alt: SITE_NAME,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SHARE_DESCRIPTION,
+    images: [SHARE_IMAGE],
   },
 };
 
