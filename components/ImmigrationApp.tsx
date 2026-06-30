@@ -8,6 +8,8 @@ import Image from "next/image";
 import { PHASES, WHATSAPP_DIGITS, WHATSAPP_DISPLAY } from "@/lib/config";
 import { SERVICES } from "@/lib/services";
 import type { Answers, Question } from "@/lib/types";
+import { CONTENT_CATEGORY } from "@/lib/meta/events";
+import { trackBrowser } from "@/lib/meta/pixel-client";
 import { Ico } from "./icons";
 import Progress from "./Progress";
 import HeroSlide from "./HeroSlide";
@@ -81,6 +83,15 @@ export default function ImmigrationApp() {
     setServiceId(id);
     setAnswers({});
     setVideoDone(false); // hay que volver a ver el video del nuevo servicio
+    // Señal de embudo: el usuario eligió un servicio.
+    const picked = SERVICES.find((s) => s.id === id);
+    if (picked) {
+      trackBrowser("ViewContent", {
+        content_ids: [picked.id],
+        content_name: picked.name,
+        content_category: CONTENT_CATEGORY,
+      });
+    }
     // avanza al video tras una breve pausa para que se note la selección
     setTimeout(() => setIdx(2), 260);
   }
@@ -88,8 +99,9 @@ export default function ImmigrationApp() {
   // El video terminó: se desbloquea y avanza a la primera pregunta.
   const handleVideoEnded = useCallback(() => {
     setVideoDone(true);
+    if (service) trackBrowser("VideoCompleted", { content_name: service.name });
     setIdx((i) => Math.min(i + 1, slides.length - 1));
-  }, [slides.length]);
+  }, [slides.length, service]);
 
   function answer(qid: string, val: string | string[], kind: Question["kind"]) {
     setAnswers((prev) => ({ ...prev, [qid]: val }));
@@ -149,6 +161,7 @@ export default function ImmigrationApp() {
             href={`https://wa.me/${WHATSAPP_DIGITS}`}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => trackBrowser("Contact")}
           >
             {Ico.whatsapp}
             <span>{WHATSAPP_DISPLAY}</span>

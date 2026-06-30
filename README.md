@@ -67,6 +67,65 @@ public/              logo.png y carpeta videos/
 project/             Bundle de diseño original (referencia, no se compila)
 ```
 
+## Meta Pixel + Conversions API (CAPI)
+
+La landing está instrumentada para **Meta Ads** (campañas de Ventas / lead-gen) con
+**Pixel** (navegador) + **Conversions API** (servidor) y **deduplicación por `event_id`**.
+
+**Pixel ID:** `1489091455876816`.
+
+### Eventos que se envían
+
+| Paso del embudo | Evento Meta | Canal |
+| --- | --- | --- |
+| Carga de la página | `PageView` | Navegador |
+| Elegir un servicio | `ViewContent` | Navegador |
+| Terminar el video | `VideoCompleted` (custom) | Navegador |
+| Ver un resultado que califica | `EvaluationCompleted` (custom) | Navegador |
+| **Clic al CTA de WhatsApp (resultado)** | **`Lead`** ← conversión clave | **Navegador + CAPI (deduplicado)** |
+| Clic al WhatsApp del header | `Contact` | Navegador |
+
+> La campaña de Ventas debe **optimizar por `Lead`**. El resto son señales de embudo
+> y audiencias de remarketing. Esta landing no recolecta email/teléfono, así que el
+> matching server-side usa `fbp`/`fbc`/IP/User-Agent + un `external_id` de primera
+> parte (cookie `ulp_vid`).
+
+### Variables de entorno (Meta)
+
+Copia `.env.example` → `.env.local` (local) o configúralas en Vercel:
+
+| Variable | Ámbito | Notas |
+| --- | --- | --- |
+| `NEXT_PUBLIC_FACEBOOK_PIXEL_ID` | Público | Pixel ID. Tiene fallback en el código. |
+| `FACEBOOK_CONVERSION_API_TOKEN` | **Secreto** | Token de la CAPI. Sin él, el CAPI hace _no-op_ seguro. |
+| `FACEBOOK_GRAPH_API_VERSION` | Servidor | Opcional (default `v23.0`). |
+| `FACEBOOK_TEST_EVENT_CODE` | Servidor | Solo QA. **Vacío en producción.** |
+| `NEXT_PUBLIC_META_REQUIRE_CONSENT` | Público | `"1"` activa el banner opt-in (GDPR). Vacío = disparo directo (EE.UU.). |
+
+### Cómo obtener el token de la CAPI
+
+1. **business.facebook.com** → **Events Manager** (Administrador de eventos).
+2. Selecciona el dataset/Pixel `1489091455876816`.
+3. **Settings / Configuración** → **Conversions API** → **Generate access token**.
+4. Copia el token (`EAA...`) en `FACEBOOK_CONVERSION_API_TOKEN`. **Es secreto** — no lo subas a git.
+5. Para QA: pestaña **Test Events** → copia el `test_event_code` en `FACEBOOK_TEST_EVENT_CODE`.
+
+### Verificación
+
+- **Meta Pixel Helper** (extensión Chrome): debe detectar el Pixel y `PageView` una vez,
+  `ViewContent` al elegir servicio, y `Lead` con `eventID` al clicar WhatsApp.
+- **Test Events** (Events Manager): con `FACEBOOK_TEST_EVENT_CODE`, el `Lead` debe llegar
+  **Browser + Server** y **deduplicarse** a un solo evento.
+
+### Archivos relevantes
+
+- `components/meta/MetaPixel.tsx` — snippet base del Pixel (montado en `app/layout.tsx`).
+- `components/meta/ConsentBanner.tsx` — banner opt-in (Variante B, inactivo por defecto).
+- `lib/meta/events.ts` — nombres de evento y Pixel ID compartidos.
+- `lib/meta/pixel-client.ts` — helpers de navegador (cookies, track, beacon a CAPI).
+- `lib/meta/capi.ts` — helper server-side (hashing + envío a Graph API).
+- `app/api/meta/route.ts` — endpoint `POST /api/meta` que reenvía el evento a la CAPI.
+
 ## Cambiar de tema
 
 El diseño incluye tres temas. Cambia el atributo `data-style` del `<html>` en

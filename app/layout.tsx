@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Source_Sans_3, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
+import { MetaPixel } from "@/components/meta/MetaPixel";
+import { ConsentBanner } from "@/components/meta/ConsentBanner";
 
 const sourceSans = Source_Sans_3({
   subsets: ["latin"],
@@ -40,7 +42,11 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es" data-style="moderno" className={`${sourceSans.variable} ${sourceSerif.variable}`}>
-      <body>{children}</body>
+      <body>
+        {children}
+        <MetaPixel />
+        <ConsentBanner />
+      </body>
     </html>
   );
 }

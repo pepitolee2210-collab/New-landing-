@@ -4,9 +4,10 @@
    STEP 5 — RESULTADO
    tones: success | urgent (califican) · contact (revisión) · denied (no califica)
    ============================================================ */
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { waLink } from "@/lib/config";
 import type { ResultData, Service } from "@/lib/types";
+import { newEventId, trackBrowser, trackLeadDeduped } from "@/lib/meta/pixel-client";
 import Confetti from "./Confetti";
 import SocialProof from "./SocialProof";
 import { Ico, SvgIcon } from "./icons";
@@ -33,6 +34,36 @@ export default function ResultSlide({ service, result, isActive, onRestart, onTr
     const id = setTimeout(onTryOthers, DENIED_REDIRECT_MS);
     return () => clearTimeout(id);
   }, [tone, isActive, onTryOthers]);
+
+  // Id de evento estable por vista de resultado (deduplicación Pixel ↔ CAPI).
+  const eventIdRef = useRef<string>("");
+  if (!eventIdRef.current) eventIdRef.current = newEventId();
+  const leadFiredRef = useRef(false);
+
+  // Señal de embudo: el usuario llegó a un resultado que califica.
+  const evalFiredRef = useRef(false);
+  useEffect(() => {
+    if (!isActive || evalFiredRef.current) return;
+    const win = tone === "success" || tone === "urgent";
+    if (!win) return;
+    evalFiredRef.current = true;
+    trackBrowser("EvaluationCompleted", {
+      content_name: service.name,
+      status: tone,
+    });
+  }, [isActive, tone, service]);
+
+  // Conversión clave: clic al CTA de WhatsApp → Lead (Pixel + CAPI deduplicado).
+  // El <a target="_blank"> deja viva la pestaña, así que NO hace falta
+  // preventDefault ni delay; el guard evita doble disparo por doble-clic.
+  function onWhatsAppClick() {
+    if (leadFiredRef.current) return;
+    leadFiredRef.current = true;
+    trackLeadDeduped(eventIdRef.current, {
+      content_name: service.name,
+      content_ids: [service.id],
+    });
+  }
 
   // ---- Caso especial: NO CALIFICA ----
   if (tone === "denied") {
@@ -89,7 +120,13 @@ export default function ResultSlide({ service, result, isActive, onRestart, onTr
       </div>
       <p className="result__msg">{result.message}</p>
       {isWin && <SocialProof />}
-      <a className="btn btn--wa" href={waLink(message, service.whatsappDigits)} target="_blank" rel="noopener noreferrer">
+      <a
+        className="btn btn--wa"
+        href={waLink(message, service.whatsappDigits)}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={onWhatsAppClick}
+      >
         {Ico.whatsapp} {isWin ? "Agendar por WhatsApp" : "Escribirnos por WhatsApp"}
       </a>
       <button type="button" className="btn btn--ghost" onClick={onRestart}>
