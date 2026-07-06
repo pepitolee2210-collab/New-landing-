@@ -15,6 +15,8 @@ import { Ico } from "./icons";
 
 interface ScheduleModalProps {
   service: Service;
+  /** Se dispara cuando el usuario abre WhatsApp (llamada urgente o cita) — señal de Lead. */
+  onContact?: () => void;
   onClose: () => void;
 }
 
@@ -41,7 +43,7 @@ function prettyDate(iso: string): string {
   return new Intl.DateTimeFormat("es", { weekday: "long", day: "numeric", month: "long" }).format(date);
 }
 
-export default function ScheduleModal({ service, onClose }: ScheduleModalProps) {
+export default function ScheduleModal({ service, onContact, onClose }: ScheduleModalProps) {
   const [view, setView] = useState<"choose" | "date">("choose");
   const [date, setDate] = useState("");
   const [slot, setSlot] = useState<SlotId | null>(null);
@@ -92,6 +94,7 @@ export default function ScheduleModal({ service, onClose }: ScheduleModalProps) 
               href={waLink(urgentMsg, service.whatsappDigits)}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={onContact}
             >
               <span className="sched-opt__ico">{Ico.phone}</span>
               <span className="sched-opt__body">
@@ -152,7 +155,13 @@ export default function ScheduleModal({ service, onClose }: ScheduleModalProps) 
               target="_blank"
               rel="noopener noreferrer"
               aria-disabled={!ready}
-              onClick={(e) => !ready && e.preventDefault()}
+              onClick={(e) => {
+                if (!ready) {
+                  e.preventDefault();
+                  return;
+                }
+                onContact?.();
+              }}
             >
               {Ico.whatsapp} Enviar a WhatsApp
             </a>
