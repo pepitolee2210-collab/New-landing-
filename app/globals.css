@@ -756,3 +756,116 @@ html[data-style="institucional"] .btn--ghost:hover { color: #fff; }
 
 /* Foco visible accesible para navegación por teclado */
 :focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 55%, transparent); outline-offset: 2px; border-radius: 6px; }
+
+/* ============================================================
+   MODAL DE AGENDAMIENTO  (llamada urgente · cita)
+   ============================================================ */
+.sched {
+  position: fixed; inset: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  background: rgba(8, 28, 58, .58);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  animation: schedFade .22s ease both;
+}
+@keyframes schedFade { from { opacity: 0; } to { opacity: 1; } }
+
+.sched__card {
+  position: relative;
+  width: 100%; max-width: 430px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius) + 6px);
+  box-shadow: var(--card-shadow-lg);
+  padding: 30px 26px 26px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.slide-up { animation: schedUp .3s cubic-bezier(.2, .8, .25, 1) both; }
+@keyframes schedUp { from { transform: translateY(18px) scale(.97); opacity: 0; } to { transform: none; opacity: 1; } }
+
+.sched__x {
+  position: absolute; top: 14px; right: 14px;
+  width: 34px; height: 34px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--ink-faint); background: var(--surface-2);
+  transition: color .15s ease, background .15s ease;
+}
+.sched__x:hover { color: var(--ink); background: var(--line); }
+.sched__x svg { width: 18px; height: 18px; }
+
+.sched__title { font-family: var(--font-head); font-weight: var(--head-weight); color: var(--ink); font-size: 22px; line-height: 1.2; }
+.sched__sub { color: var(--ink-soft); font-size: 14.5px; line-height: 1.5; margin-top: -4px; }
+
+/* Opciones (llamada / cita) ----------------------------------- */
+.sched-opt {
+  display: flex; align-items: center; gap: 14px; text-align: left;
+  width: 100%; padding: 15px 16px;
+  border: 1.5px solid var(--line-strong); border-radius: var(--radius);
+  background: var(--surface-2);
+  transition: transform .15s ease, border-color .18s ease, box-shadow .2s ease;
+}
+.sched-opt:hover { transform: translateY(-2px); box-shadow: var(--card-shadow); }
+.sched-opt__ico {
+  flex: 0 0 auto; width: 46px; height: 46px; border-radius: 13px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.sched-opt__ico svg { width: 23px; height: 23px; }
+.sched-opt__body { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 0; }
+.sched-opt__name { font-weight: 700; color: var(--ink); font-size: 16px; }
+.sched-opt__desc { color: var(--ink-soft); font-size: 13px; line-height: 1.35; }
+.sched-opt__go { flex: 0 0 auto; color: var(--ink-faint); transition: transform .15s ease; }
+.sched-opt__go svg { width: 20px; height: 20px; }
+.sched-opt:hover .sched-opt__go { transform: translateX(3px); }
+
+.sched-opt--urgent .sched-opt__ico { background: color-mix(in srgb, var(--urgent) 12%, transparent); color: var(--urgent); }
+.sched-opt--urgent:hover { border-color: var(--urgent); }
+.sched-opt--book .sched-opt__ico { background: color-mix(in srgb, var(--primary) 12%, transparent); color: var(--primary); }
+.sched-opt--book:hover { border-color: var(--primary); }
+
+/* Vista de fecha ---------------------------------------------- */
+.sched__back {
+  align-self: flex-start; display: inline-flex; align-items: center; gap: 5px;
+  color: var(--ink-soft); font-weight: 600; font-size: 14px; margin-bottom: 2px;
+}
+.sched__back:hover { color: var(--ink); }
+.sched__back svg { width: 17px; height: 17px; }
+
+.sched__field { display: flex; flex-direction: column; gap: 8px; }
+.sched__label { font-weight: 700; color: var(--ink); font-size: 13.5px; }
+.sched__date {
+  width: 100%; padding: 13px 15px; font-size: 15.5px; color: var(--ink);
+  border: 1.5px solid var(--line-strong); border-radius: var(--radius-sm);
+  background: var(--surface-2); font-family: var(--font-body);
+}
+.sched__date:focus { border-color: var(--primary); outline: none; }
+
+.sched__slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+.sched-slot {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 12px 6px; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--line-strong); background: var(--surface-2);
+  transition: border-color .15s ease, background .15s ease, transform .12s ease;
+}
+.sched-slot:hover { transform: translateY(-1px); }
+.sched-slot__label { font-weight: 700; color: var(--ink); font-size: 14.5px; }
+.sched-slot__hint { color: var(--ink-faint); font-size: 11.5px; }
+.sched-slot--on { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 10%, var(--surface)); }
+.sched-slot--on .sched-slot__hint { color: var(--primary); }
+
+.sched__send { width: 100%; margin-top: 6px; }
+.sched__send--off { opacity: .45; pointer-events: none; }
+
+@media (max-width: 680px) {
+  .sched { align-items: flex-end; padding: 0; }
+  .sched__card {
+    max-width: 100%; border-radius: 24px 24px 0 0;
+    padding: 26px 20px calc(24px + env(safe-area-inset-bottom));
+  }
+  .slide-up { animation-name: schedSheet; }
+}
+@keyframes schedSheet { from { transform: translateY(100%); opacity: .4; } to { transform: none; opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .sched, .slide-up { animation: none; }
+  .sched-opt, .sched-slot, .sched-opt__go, .sched__x { transition: none; }
+}

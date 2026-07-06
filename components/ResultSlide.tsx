@@ -4,11 +4,11 @@
    STEP 5 — RESULTADO
    tones: success | urgent (califican) · contact (revisión) · denied (no califica)
    ============================================================ */
-import { useEffect } from "react";
-import { waLink } from "@/lib/config";
+import { useEffect, useState } from "react";
 import type { ResultData, Service } from "@/lib/types";
 import Confetti from "./Confetti";
 import SocialProof from "./SocialProof";
+import ScheduleModal from "./ScheduleModal";
 import { Ico, SvgIcon } from "./icons";
 
 interface ResultSlideProps {
@@ -26,6 +26,7 @@ const DENIED_REDIRECT_MS = 8000;
 
 export default function ResultSlide({ service, result, isActive, onRestart, onTryOthers }: ResultSlideProps) {
   const tone = result.tone;
+  const [scheduleOpen, setScheduleOpen] = useState(false);
 
   // "No califica": redirección automática a otros servicios (solo cuando es visible).
   useEffect(() => {
@@ -71,12 +72,6 @@ export default function ResultSlide({ service, result, isActive, onRestart, onTr
 
   const badgeIcon = tone === "contact" ? Ico.alert : tone === "urgent" ? Ico.clock : Ico.check;
 
-  const message =
-    `Hola UsaLatinoPrime 👋 Acabo de calificar en su página para el servicio: ${service.name}. ` +
-    (isWin
-      ? "Quiero agendar mi evaluación gratuita con un asesor."
-      : "Quiero más información sobre mi caso.");
-
   return (
     <div className={"result slide-anim result--" + tone}>
       <Confetti go={isWin} />
@@ -89,12 +84,13 @@ export default function ResultSlide({ service, result, isActive, onRestart, onTr
       </div>
       <p className="result__msg">{result.message}</p>
       {isWin && <SocialProof />}
-      <a className="btn btn--wa" href={waLink(message, service.whatsappDigits)} target="_blank" rel="noopener noreferrer">
+      <button type="button" className="btn btn--wa" onClick={() => setScheduleOpen(true)}>
         {Ico.whatsapp} {isWin ? "Agendar por WhatsApp" : "Escribirnos por WhatsApp"}
-      </a>
+      </button>
       <button type="button" className="btn btn--ghost" onClick={onRestart}>
         Empezar de nuevo
       </button>
+      {scheduleOpen && <ScheduleModal service={service} onClose={() => setScheduleOpen(false)} />}
     </div>
   );
 }
