@@ -41,10 +41,10 @@ export default function HeroSlide() {
         <div className="hero__divider" />
         <div className="hero__stat">
           <div className="hero__stat-num">
-            Equipo <span>legal</span>
+            Tecnología <span>de punta</span>
           </div>
           <div className="hero__stat-label">
-            Plataforma desarrollada por profesionales legales, a tu lado en los momentos clave.
+            Nuestra tecnología de punta te permite terminar tu expediente mucho más rápido que lo haría un bufete tradicional.
           </div>
         </div>
       </div>
