@@ -67,7 +67,7 @@ function HeroSlide({ t }) {
       <div className="hero__right">
         <div className="hero__stat">
           <div className="hero__stat-num"><span>1/10</span> del costo</div>
-          <div className="hero__stat-label">de lo que cobra un bufete tradicional, sin honorarios de miles de dólares.</div>
+          <div className="hero__stat-label">de lo que cobra un servicio tradicional, sin honorarios de miles de dólares.</div>
         </div>
         <div className="hero__divider" />
         <div className="hero__stat">

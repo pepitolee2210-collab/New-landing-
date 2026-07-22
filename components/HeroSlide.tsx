@@ -26,7 +26,7 @@ export default function HeroSlide() {
             <span>1/10</span> del costo
           </div>
           <div className="hero__stat-label">
-            de lo que cobra un bufete tradicional, sin honorarios de miles de dólares.
+            de lo que cobra un servicio tradicional, sin honorarios de miles de dólares.
           </div>
         </div>
         <div className="hero__divider" />
@@ -44,7 +44,7 @@ export default function HeroSlide() {
             Tecnología <span>de punta</span>
           </div>
           <div className="hero__stat-label">
-            Nuestra tecnología de punta te permite terminar tu expediente mucho más rápido que lo haría un bufete tradicional.
+            Nuestra tecnología de punta te permite terminar tu expediente mucho más rápido que lo haría un servicio tradicional.
           </div>
         </div>
       </div>

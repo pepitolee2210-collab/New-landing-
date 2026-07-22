@@ -10,7 +10,7 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "videoUrl": "",
   "videoPoster": "",
   "heroTitle": "Tu trámite migratorio, <em>en tus manos</em>",
-  "heroLead": "UsaLatinoPrime es una plataforma digital de inmigración — no un bufete tradicional. Llevas tu propio caso desde el celular, guiado paso a paso, con validación automática y nuestro equipo a tu lado en los momentos clave."
+  "heroLead": "UsaLatinoPrime es una plataforma digital de inmigración — no un servicio tradicional. Llevas tu propio caso desde el celular, guiado paso a paso, con validación automática y nuestro equipo a tu lado en los momentos clave."
 }/*EDITMODE-END*/;
 
 const STYLE_OPTIONS = ["clasico", "institucional", "moderno"];

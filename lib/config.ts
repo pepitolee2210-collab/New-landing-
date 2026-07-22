@@ -31,7 +31,7 @@ export const PHASES = [
 /** Contenido del hero (admite <em> para resaltar). */
 export const HERO_TITLE = "Tu trámite migratorio, <em>en tus manos</em>";
 export const HERO_LEAD =
-  "UsaLatinoPrime es una plataforma digital de inmigración — no un bufete tradicional. " +
+  "UsaLatinoPrime es una plataforma digital de inmigración — no un servicio tradicional. " +
   "Llevas tu propio caso desde el celular, guiado paso a paso, con validación automática " +
   "y nuestro equipo a tu lado en los momentos clave.";
 
