@@ -37,6 +37,8 @@ export interface ResultData {
 
 export interface Service {
   id: string;
+  /** Segmento de URL propio del servicio (p. ej. "visa-juvenil" → /visa-juvenil). */
+  slug: string;
   icon: IconName;
   name: string;
   tagline: string;

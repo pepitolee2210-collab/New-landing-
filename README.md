@@ -1,12 +1,35 @@
-# UsaLatinoPrime — Evaluación migratoria gratuita
+# UsaLatinoPrime — Sitio de servicios migratorios
 
-Aplicación web (Next.js 14 · App Router · TypeScript) que guía al usuario por un
-recorrido de 5 pasos —**Quiénes somos → Servicios → Video → Preguntas → Resultado**—
-y lo lleva a contactar por WhatsApp según califique. Optimizada para **móvil**, que es
-donde está la mayoría de los clientes.
+Sitio web (Next.js 14 · App Router · TypeScript) con:
+
+- **Home de marca** (`/`): quiénes somos, grid de servicios, sección de la app móvil
+  (App Store / Google Play) y opiniones de clientes.
+- **Una URL por servicio** (`/visa-juvenil`, `/asilo-politico`, `/apelacion-bia`, …):
+  cada anuncio de Meta aterriza directo en el embudo de su servicio
+  —**Video → Preguntas → Resultado**— y termina en WhatsApp.
+- **Reseñas de clientes**: `/califica` (formulario que se envía al cliente) →
+  moderación en `/admin` → publicación automática en la home. Backend: Supabase.
+- Optimizado para **móvil**, que es donde está la mayoría de los clientes.
 
 > Implementada a partir del diseño exportado desde Claude Design (el bundle original
 > se conserva en `project/` como referencia).
+
+## URLs de servicios (para los ads)
+
+| Servicio | URL canónica | Alias que redirigen |
+| --- | --- | --- |
+| Visa Juvenil · SIJS | `/visa-juvenil` | `/visajuvenil`, `/sijs` |
+| Petición I-360 | `/peticion-i-360` | `/i-360`, `/i360` |
+| I-485 · Ajuste de Estatus | `/ajuste-de-estatus` | `/i-485`, `/ajustedeestatus` |
+| Asilo Político | `/asilo-politico` | `/asilo`, `/asilopolitico` |
+| Reforzar Asilo | `/reforzar-asilo` | `/reforzamientodeasilo`, … |
+| Apelación · BIA | `/apelacion-bia` | `/apelacion`, `/apelacionbia` |
+| Cambio de Corte | `/cambio-de-corte` | `/cambio-corte` |
+| ITIN Number | `/itin` | `/itin-number` |
+| Declaración de Impuestos | `/declaracion-de-impuestos` | `/impuestos`, `/taxes` |
+
+Los alias devuelven **308** a la canónica (configurados en `next.config.mjs`).
+Los slugs viven en `lib/services.ts` (campo `slug`).
 
 ## Stack
 
@@ -35,7 +58,7 @@ Copia `.env.example` a `.env.local` (o configúralas en Vercel):
 
 | Variable | Descripción | Valor por defecto |
 | --- | --- | --- |
-| `NEXT_PUBLIC_WHATSAPP` | Número de WhatsApp del negocio (con código de país) | `+1 (402) 824-8171` |
+| `NEXT_PUBLIC_WHATSAPP` | Número de WhatsApp del negocio (con código de país) | `+1 (763) 342-2258` |
 | `NEXT_PUBLIC_VIDEO_URL` | Ruta del video demo dentro de `/public` | `/videos/demo.mp4` |
 | `NEXT_PUBLIC_VIDEO_POSTER` | Imagen de portada del video (opcional) | _(vacío)_ |
 
@@ -57,15 +80,56 @@ Copia `.env.example` a `.env.local` (o configúralas en Vercel):
 ## Estructura
 
 ```
-app/                 Layout, página y estilos globales
-  layout.tsx         Tipografías, metadatos, tema (data-style="moderno")
-  page.tsx           Punto de entrada → <ImmigrationApp />
-  globals.css        Sistema de estilos + rediseño móvil
-components/          Componentes de UI (stepper, slides, quiz, resultado)
-lib/                 Datos de servicios, tipos y configuración
-public/              logo.png y carpeta videos/
-project/             Bundle de diseño original (referencia, no se compila)
+app/
+  layout.tsx           Tipografías, metadatos, tema (data-style="moderno")
+  page.tsx             Home de marca (hero, servicios, app, opiniones, footer)
+  [slug]/page.tsx      Página de cada servicio → <ServiceFunnel />
+  califica/page.tsx    Formulario de reseña para clientes
+  admin/page.tsx       Panel de moderación de reseñas (contraseña)
+  api/reviews/         POST reseña (queda pendiente)
+  api/admin/           Login + listar/aprobar/rechazar reseñas
+  sitemap.ts           Sitemap con todas las URLs de servicio
+  globals.css          Sistema de estilos + rediseño móvil
+components/
+  ServiceFunnel.tsx    Embudo por servicio (video → quiz → resultado)
+  SiteHeader.tsx       Barra superior compartida
+  home/                Secciones de la home (hero, servicios, app, reseñas, footer)
+  reviews/ admin/      Formulario de reseña y panel admin
+lib/                   Servicios (+slug), reseñas (Supabase REST), auth admin, meta
+supabase/setup.sql     Esquema + RLS + funciones de moderación (ejecutar una vez)
+public/                logo.png y carpeta videos/
+project/               Bundle de diseño original (referencia, no se compila)
 ```
+
+## Reseñas de clientes (Supabase)
+
+Flujo: el cliente entra a **`/califica`** (link que le envías por WhatsApp) → deja
+estrellas + comentario → queda **pendiente** → en **`/admin`** la apruebas o rechazas →
+las aprobadas aparecen en la home al instante (revalidación automática).
+
+Para activarlo:
+
+1. Crea un proyecto en Supabase.
+2. Abre el **SQL Editor**, pega `supabase/setup.sql` **sustituyendo
+   `REEMPLAZA_ESTE_SECRETO`** por una cadena aleatoria larga, y ejecútalo.
+3. Configura las variables (`SUPABASE_URL`, `SUPABASE_ANON_KEY`,
+   `SUPABASE_ADMIN_SECRET` con esa misma cadena, `ADMIN_PASSWORD`).
+4. Sin estas variables la web funciona igual: la sección de opiniones se oculta y
+   `/califica` muestra "muy pronto". No hace falta la `service_role` key: la
+   moderación usa funciones SQL protegidas por el secreto.
+
+## Sección de la app móvil
+
+La home incluye la sección **"Nuestra aplicación"** con badges de App Store y
+Google Play. Mientras `NEXT_PUBLIC_APPSTORE_URL` / `NEXT_PUBLIC_PLAYSTORE_URL`
+estén vacías, los badges se muestran como **"Próximamente"**; al llenarlas se
+convierten en enlaces de descarga.
+
+## Pagos (fase siguiente)
+
+El sitio está pensado para incorporar el cobro de servicios: cada servicio ya tiene
+página propia (donde vivirá su CTA de pago) y la base de Supabase podrá guardar
+clientes/órdenes. Pendiente de definir proveedor (p. ej. Stripe) y precios.
 
 ## Meta Pixel + Conversions API (CAPI)
 
@@ -78,8 +142,8 @@ La landing está instrumentada para **Meta Ads** (campañas de Ventas / lead-gen
 
 | Paso del embudo | Evento Meta | Canal |
 | --- | --- | --- |
-| Carga de la página | `PageView` | Navegador |
-| Elegir un servicio | `ViewContent` | Navegador |
+| Carga de la página (y cada navegación interna) | `PageView` | Navegador |
+| Aterrizar en la página de un servicio | `ViewContent` | Navegador |
 | Terminar el video | `VideoCompleted` (custom) | Navegador |
 | Ver un resultado que califica | `EvaluationCompleted` (custom) | Navegador |
 | **Clic al CTA de WhatsApp (resultado)** | **`Lead`** ← conversión clave | **Navegador + CAPI (deduplicado)** |

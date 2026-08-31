@@ -5,7 +5,7 @@
 // Número general de WhatsApp: lo usan TODOS los servicios.
 // Se define en código (no por variable de entorno) para que ninguna
 // configuración de Vercel pueda sobrescribirlo.
-const RAW_WHATSAPP = "+1 (402) 824-8171";
+const RAW_WHATSAPP = "+1 (763) 342-2258";
 
 /** Número tal cual para mostrar en pantalla. */
 export const WHATSAPP_DISPLAY = RAW_WHATSAPP;
@@ -19,14 +19,8 @@ export const VIDEO_URL = process.env.NEXT_PUBLIC_VIDEO_URL ?? "";
 /** Imagen de portada opcional del video. */
 export const VIDEO_POSTER = process.env.NEXT_PUBLIC_VIDEO_POSTER ?? "";
 
-/** Fases del recorrido (stepper). */
-export const PHASES = [
-  "Quiénes somos",
-  "Servicios",
-  "Video",
-  "Preguntas",
-  "Resultado",
-] as const;
+/** Fases del embudo de cada servicio (página /slug). */
+export const FUNNEL_PHASES = ["Video", "Preguntas", "Resultado"] as const;
 
 /** Contenido del hero (admite <em> para resaltar). */
 export const HERO_TITLE = "Tu trámite migratorio, <em>en tus manos</em>";

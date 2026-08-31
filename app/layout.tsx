@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Source_Sans_3, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 import { MetaPixel } from "@/components/meta/MetaPixel";
+import { PixelRouteTracker } from "@/components/meta/PixelRouteTracker";
 import { ConsentBanner } from "@/components/meta/ConsentBanner";
 
 const sourceSans = Source_Sans_3({
@@ -26,13 +27,7 @@ const SHARE_DESCRIPTION =
   "Descubre si calificas para tu trámite migratorio en minutos, desde tu celular.";
 const SHARE_IMAGE = "/og-image.jpg";
 
-// URL pública del sitio. Permite override manual; si no, usa el dominio de
-// producción que Vercel inyecta automáticamente; en local cae a localhost.
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ??
-  (process.env.VERCEL_PROJECT_PRODUCTION_URL
-    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-    : "http://localhost:3000");
+import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -67,15 +62,16 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#2563c4",
+  themeColor: "#1b4fa0",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" data-style="moderno" className={`${sourceSans.variable} ${sourceSerif.variable}`}>
+    <html lang="es" data-style="clasico" className={`${sourceSans.variable} ${sourceSerif.variable}`}>
       <body>
         {children}
         <MetaPixel />
+        <PixelRouteTracker />
         <ConsentBanner />
       </body>
     </html>

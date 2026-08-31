@@ -31,6 +31,7 @@ const M_BEST = "¡Felicitaciones! Es el mejor momento para iniciar tu trámite c
 export const SERVICES: Service[] = [
   {
     id: "visa-juvenil",
+    slug: "visa-juvenil",
     icon: "child",
     video: "/videos/visa-juvenil.mp4",
     name: "Visa Juvenil · SIJS",
@@ -52,6 +53,7 @@ export const SERVICES: Service[] = [
   },
   {
     id: "i-360",
+    slug: "peticion-i-360",
     icon: "folder",
     video: "/videos/visa-juvenil.mp4",
     name: "Petición I-360",
@@ -70,6 +72,7 @@ export const SERVICES: Service[] = [
   },
   {
     id: "i-485",
+    slug: "ajuste-de-estatus",
     icon: "card",
     video: "/videos/ajuste-estatus.mp4",
     name: "I-485 · Ajuste de Estatus",
@@ -88,6 +91,7 @@ export const SERVICES: Service[] = [
   },
   {
     id: "asilo",
+    slug: "asilo-politico",
     icon: "shield",
     video: "/videos/asilo-politico.mp4",
     name: "Asilo Político",
@@ -115,6 +119,7 @@ export const SERVICES: Service[] = [
   },
   {
     id: "reforzar-asilo",
+    slug: "reforzar-asilo",
     icon: "shieldPlus",
     video: "/videos/asilo-politico.mp4",
     name: "Reforzar Asilo",
@@ -133,6 +138,7 @@ export const SERVICES: Service[] = [
   },
   {
     id: "apelacion",
+    slug: "apelacion-bia",
     icon: "appeal",
     video: "/videos/apelacion-bia.mp4",
     name: "Apelación · BIA",
@@ -158,6 +164,7 @@ export const SERVICES: Service[] = [
   },
   {
     id: "cambio-corte",
+    slug: "cambio-de-corte",
     icon: "pin",
     video: "/videos/cambio-corte.mp4",
     name: "Cambio de Corte",
@@ -176,6 +183,7 @@ export const SERVICES: Service[] = [
   },
   {
     id: "itin",
+    slug: "itin",
     icon: "id",
     video: "/videos/itin.mp4",
     name: "ITIN Number",
@@ -194,6 +202,7 @@ export const SERVICES: Service[] = [
   },
   {
     id: "impuestos",
+    slug: "declaracion-de-impuestos",
     icon: "receipt",
     video: "/videos/taxes.mp4",
     name: "Declaración de Impuestos",
@@ -225,3 +234,12 @@ export const SERVICES: Service[] = [
     },
   },
 ];
+
+// ---- Búsqueda por slug / id ----
+export function getServiceBySlug(slug: string): Service | undefined {
+  return SERVICES.find((s) => s.slug === slug);
+}
+
+export function getServiceById(id: string): Service | undefined {
+  return SERVICES.find((s) => s.id === id);
+}

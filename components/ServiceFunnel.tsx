@@ -1,72 +1,72 @@
 "use client";
 
 /* ============================================================
-   UsaLatinoPrime — App principal (stepper horizontal)
+   UsaLatinoPrime — Embudo de un servicio (página /slug)
+   Cada servicio tiene su propia URL para campañas de Meta Ads.
+   Recorrido: video (obligatorio) → preguntas → resultado.
    ============================================================ */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Image from "next/image";
-import { PHASES, WHATSAPP_DIGITS, WHATSAPP_DISPLAY } from "@/lib/config";
-import { SERVICES } from "@/lib/services";
+import { useRouter } from "next/navigation";
+import { FUNNEL_PHASES } from "@/lib/config";
+import { getServiceById } from "@/lib/services";
 import type { Answers, Question } from "@/lib/types";
 import { CONTENT_CATEGORY } from "@/lib/meta/events";
 import { trackBrowser } from "@/lib/meta/pixel-client";
 import { Ico } from "./icons";
 import Progress from "./Progress";
-import HeroSlide from "./HeroSlide";
-import ServicesSlide from "./ServicesSlide";
+import SiteHeader from "./SiteHeader";
 import VideoSlide from "./VideoSlide";
 import QuizSlide from "./QuizSlide";
 import ResultSlide from "./ResultSlide";
 
 type Slide =
-  | { type: "hero"; phase: number }
-  | { type: "services"; phase: number }
   | { type: "video"; phase: number }
   | { type: "quiz"; phase: number; q: Question; qi: number }
   | { type: "result"; phase: number };
 
-export default function ImmigrationApp() {
-  const [serviceId, setServiceId] = useState<string | null>(null);
+export default function ServiceFunnel({ serviceId }: { serviceId: string }) {
+  const router = useRouter();
+  const service = getServiceById(serviceId)!;
+
   const [answers, setAnswers] = useState<Answers>({});
   const [idx, setIdx] = useState(0);
   const [videoDone, setVideoDone] = useState(false);
   const stageRef = useRef<HTMLElement | null>(null);
 
-  const service = useMemo(() => SERVICES.find((s) => s.id === serviceId) ?? null, [serviceId]);
-
-  // Lista de slides (depende del servicio elegido).
   const slides = useMemo<Slide[]>(() => {
-    const base: Slide[] = [
-      { type: "hero", phase: 0 },
-      { type: "services", phase: 1 },
-      { type: "video", phase: 2 },
-    ];
-    if (!service) return base;
-    const qs: Slide[] = service.questions.map((q, i) => ({ type: "quiz", phase: 3, q, qi: i }));
-    return [...base, ...qs, { type: "result", phase: 4 }];
+    const qs: Slide[] = service.questions.map((q, i) => ({ type: "quiz", phase: 1, q, qi: i }));
+    return [{ type: "video", phase: 0 }, ...qs, { type: "result", phase: 2 }];
   }, [service]);
 
   const safeIdx = Math.min(idx, slides.length - 1);
   const cur = slides[safeIdx];
 
-  const result = useMemo(
-    () => (service ? service.evaluate(answers, service) : null),
-    [service, answers],
-  );
+  const result = useMemo(() => service.evaluate(answers, service), [service, answers]);
+
+  // Señal de embudo: el visitante aterrizó en la página del servicio
+  // (equivale al antiguo "eligió un servicio", clave para los ads).
+  const viewFiredRef = useRef(false);
+  useEffect(() => {
+    if (viewFiredRef.current) return;
+    viewFiredRef.current = true;
+    trackBrowser("ViewContent", {
+      content_ids: [service.id],
+      content_name: service.name,
+      content_category: CONTENT_CATEGORY,
+    });
+  }, [service]);
 
   // Reglas de navegación.
   const canNext = useCallback((): boolean => {
     if (!cur) return false;
-    if (cur.type === "services") return !!service;
     if (cur.type === "video") return videoDone; // obligatorio ver el video completo
     if (cur.type === "quiz") {
       if (cur.q.kind === "checklist") return true; // checklist es opcional-completo
       const a = answers[cur.q.id];
       return a !== undefined && a !== null;
     }
-    if (cur.type === "result") return false;
-    return true;
-  }, [cur, service, answers, videoDone]);
+    return false; // result: no hay "siguiente"
+  }, [cur, answers, videoDone]);
 
   const isLastBeforeResult = cur?.type === "quiz" && safeIdx === slides.length - 2;
 
@@ -79,27 +79,10 @@ export default function ImmigrationApp() {
   }, [canNext, go, safeIdx]);
   const prev = useCallback(() => go(safeIdx - 1), [go, safeIdx]);
 
-  function pickService(id: string) {
-    setServiceId(id);
-    setAnswers({});
-    setVideoDone(false); // hay que volver a ver el video del nuevo servicio
-    // Señal de embudo: el usuario eligió un servicio.
-    const picked = SERVICES.find((s) => s.id === id);
-    if (picked) {
-      trackBrowser("ViewContent", {
-        content_ids: [picked.id],
-        content_name: picked.name,
-        content_category: CONTENT_CATEGORY,
-      });
-    }
-    // avanza al video tras una breve pausa para que se note la selección
-    setTimeout(() => setIdx(2), 260);
-  }
-
   // El video terminó: se desbloquea y avanza a la primera pregunta.
   const handleVideoEnded = useCallback(() => {
     setVideoDone(true);
-    if (service) trackBrowser("VideoCompleted", { content_name: service.name });
+    trackBrowser("VideoCompleted", { content_name: service.name });
     setIdx((i) => Math.min(i + 1, slides.length - 1));
   }, [slides.length, service]);
 
@@ -110,20 +93,17 @@ export default function ImmigrationApp() {
     }
   }
 
+  // Reinicia el embudo de ESTE servicio.
   function restart() {
-    setServiceId(null);
     setAnswers({});
     setVideoDone(false);
     setIdx(0);
   }
 
-  // Tras un "no califica": vuelve a la lista de servicios para elegir otro.
+  // "Ver otros servicios": a la sección de servicios de la home.
   const goToServices = useCallback(() => {
-    setServiceId(null);
-    setAnswers({});
-    setVideoDone(false);
-    setIdx(1);
-  }, []);
+    router.push("/#servicios");
+  }, [router]);
 
   // Navegación con teclado.
   useEffect(() => {
@@ -144,33 +124,10 @@ export default function ImmigrationApp() {
 
   return (
     <div className="app">
-      {/* Top bar */}
-      <header className="topbar">
-        <Image
-          className="topbar__logo"
-          src="/logo.png"
-          alt="USA Latino Prime"
-          width={59}
-          height={46}
-          priority
-          style={{ width: "auto" }}
-        />
-        <div className="topbar__right">
-          <a
-            className="topbar__phone"
-            href={`https://wa.me/${WHATSAPP_DIGITS}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => trackBrowser("Contact")}
-          >
-            {Ico.whatsapp}
-            <span>{WHATSAPP_DISPLAY}</span>
-          </a>
-        </div>
-      </header>
+      <SiteHeader />
 
       {/* Progreso */}
-      <Progress steps={PHASES.map((label) => ({ label }))} current={cur ? cur.phase : 0} />
+      <Progress steps={FUNNEL_PHASES.map((label) => ({ label }))} current={cur ? cur.phase : 0} />
 
       {/* Stage */}
       <main className="stage" ref={stageRef}>
@@ -180,14 +137,10 @@ export default function ImmigrationApp() {
               <section
                 className="slide"
                 key={i}
-                data-screen-label={PHASES[sl.phase]}
+                data-screen-label={FUNNEL_PHASES[sl.phase]}
                 aria-hidden={i !== safeIdx}
               >
                 <div className="slide__inner">
-                  {sl.type === "hero" && <HeroSlide />}
-                  {sl.type === "services" && (
-                    <ServicesSlide services={SERVICES} onPick={pickService} selected={serviceId} />
-                  )}
                   {sl.type === "video" && (
                     <VideoSlide
                       service={service}
@@ -195,7 +148,7 @@ export default function ImmigrationApp() {
                       onEnded={handleVideoEnded}
                     />
                   )}
-                  {sl.type === "quiz" && service && (
+                  {sl.type === "quiz" && (
                     <QuizSlide
                       service={service}
                       question={sl.q}
@@ -205,7 +158,7 @@ export default function ImmigrationApp() {
                       onAnswer={(v) => answer(sl.q.id, v, sl.q.kind)}
                     />
                   )}
-                  {sl.type === "result" && service && result && (
+                  {sl.type === "result" && (
                     <ResultSlide
                       service={service}
                       result={result}
@@ -232,15 +185,11 @@ export default function ImmigrationApp() {
             <span />
           )}
           <span className="navbar__hint">
-            {cur.type === "services" && !service
-              ? "Selecciona un servicio para continuar"
-              : cur.type === "video"
-                ? "Mira el video para continuar"
-                : cur.type === "quiz" && cur.q.kind === "checklist"
-                  ? "Marca lo que tengas y continúa"
-                  : cur.type === "quiz"
-                    ? "Elige una respuesta"
-                    : "Paso " + (safeIdx + 1) + " de " + slides.length}
+            {cur.type === "video"
+              ? "Mira el video para continuar"
+              : cur.type === "quiz" && cur.q.kind === "checklist"
+                ? "Marca lo que tengas y continúa"
+                : "Elige una respuesta"}
           </span>
           <button type="button" className="btn btn--primary" onClick={next} disabled={!canNext()}>
             {nextLabel} {Ico.arrow}
