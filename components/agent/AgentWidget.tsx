@@ -7,12 +7,12 @@
    Se muestra en la home y en /califica; no compite con el embudo.
    ============================================================ */
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { waLink } from "@/lib/config";
 import { getServiceBySlug } from "@/lib/services";
 import { trackBrowser } from "@/lib/meta/pixel-client";
 import { Ico } from "../icons";
+import ServiceLink from "../ServiceLink";
 import CallView from "./CallView";
 
 interface Msg {
@@ -71,13 +71,13 @@ function renderRich(text: string, onWa: () => void): ReactNode[] {
       const svc = getServiceBySlug(m[1]);
       if (svc) {
         out.push(
-          <Link key={`s${k++}`} href={`/${svc.slug}`} className="pa-card">
+          <ServiceLink key={`s${k++}`} href={`/${svc.slug}`} video={svc.video} className="pa-card">
             <span className="pa-card__t">
               <span className="pa-card__name">{svc.name}</span>
               <span className="pa-card__sub">Calificar ahora · 2 min</span>
             </span>
             {Ico.arrow}
-          </Link>,
+          </ServiceLink>,
         );
       }
     } else {

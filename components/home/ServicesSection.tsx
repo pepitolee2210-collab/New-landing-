@@ -3,9 +3,9 @@
    Cada fólder es el link a la URL propia del servicio (ads).
    La pestaña muestra el slug real; el sello aparece al hover.
    ============================================================ */
-import Link from "next/link";
 import { SERVICES } from "@/lib/services";
 import { Ico, SvgIcon } from "../icons";
+import ServiceLink from "../ServiceLink";
 
 export default function ServicesSection() {
   return (
@@ -24,9 +24,10 @@ export default function ServicesSection() {
 
         <div className="lp-folders">
           {SERVICES.map((s, i) => (
-            <Link
+            <ServiceLink
               key={s.id}
               href={`/${s.slug}`}
+              video={s.video}
               className="lp-folder"
               data-reveal
               style={{ "--d": `${(i % 3) * 0.09}s` } as React.CSSProperties}
@@ -48,7 +49,7 @@ export default function ServicesSection() {
                   ★
                 </span>
               </span>
-            </Link>
+            </ServiceLink>
           ))}
         </div>
       </div>

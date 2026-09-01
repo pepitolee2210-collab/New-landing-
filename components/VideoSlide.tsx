@@ -1,15 +1,18 @@
 "use client";
 
 /* ============================================================
-   STEP 3 — VIDEO (reproducción obligatoria)
-   - Autoplay al activarse el paso (tras elegir servicio).
-   - Sin controles: no se puede pausar ni saltar.
-   - Si el navegador bloquea el audio, arranca silenciado y muestra
-     un botón "Activar sonido" (un toque del usuario).
-   - Al terminar (onEnded) la app avanza automáticamente.
+   STEP — VIDEO (reproducción obligatoria)
+   - Autoplay al activarse el paso; sin controles (no se puede saltar).
+   - Si el visitante llegó tocando una tarjeta de servicio (home o chat de
+     Prime), reutiliza el <video> "desbloqueado" en ese gesto → suena
+     desde el primer segundo (ver lib/media-unlock.ts).
+   - Si el navegador bloquea el audio (p. ej. llegó directo desde un
+     anuncio), arranca silenciado y muestra "Activar sonido".
+   - Al terminar (ended) la app avanza automáticamente.
    ============================================================ */
 import { useEffect, useRef, useState } from "react";
 import { VIDEO_POSTER, VIDEO_URL } from "@/lib/config";
+import { takeUnlockedVideo } from "@/lib/media-unlock";
 import type { Service } from "@/lib/types";
 import { Ico } from "./icons";
 
@@ -23,7 +26,10 @@ interface VideoSlideProps {
 
 export default function VideoSlide({ service, isActive, onEnded }: VideoSlideProps) {
   const videoSrc = service?.video ?? VIDEO_URL;
+  const holderRef = useRef<HTMLDivElement | null>(null);
   const ref = useRef<HTMLVideoElement | null>(null);
+  const onEndedRef = useRef(onEnded);
+  const isActiveRef = useRef(isActive);
   const [failed, setFailed] = useState(false);
   const [needsSound, setNeedsSound] = useState(false); // reproduciendo en silencio
   const [needsTap, setNeedsTap] = useState(false); // autoplay totalmente bloqueado
@@ -31,10 +37,69 @@ export default function VideoSlide({ service, isActive, onEnded }: VideoSlidePro
 
   const hasVideo = videoSrc.trim().length > 0 && !failed;
 
+  useEffect(() => {
+    onEndedRef.current = onEnded;
+  }, [onEnded]);
+  useEffect(() => {
+    isActiveRef.current = isActive;
+  }, [isActive]);
+
   // Reinicia el estado de error cuando cambia el video (otro servicio).
   useEffect(() => {
     setFailed(false);
   }, [videoSrc]);
+
+  // Monta el elemento <video>: reutiliza el desbloqueado en el gesto si existe.
+  useEffect(() => {
+    const holder = holderRef.current;
+    if (!holder || !hasVideo) return;
+
+    let vid = takeUnlockedVideo(videoSrc);
+    if (!vid) {
+      vid = document.createElement("video");
+      vid.src = videoSrc;
+    }
+    const v = vid;
+    v.dataset.claimed = "1";
+    v.removeAttribute("style");
+    v.playsInline = true;
+    v.setAttribute("playsinline", "");
+    v.preload = "auto";
+    v.disablePictureInPicture = true;
+    v.setAttribute("controlslist", "nodownload noplaybackrate nofullscreen");
+    if (VIDEO_POSTER) v.poster = VIDEO_POSTER;
+
+    const onEnd = () => onEndedRef.current();
+    // No se puede pausar: si pausan y el paso sigue activo, reanuda.
+    const onPause = () => {
+      if (isActiveRef.current && !v.ended) void v.play().catch(() => {});
+    };
+    const onTime = () => {
+      if (v.duration) setProgress((v.currentTime / v.duration) * 100);
+    };
+    const onError = () => setFailed(true);
+    const onCtx = (e: Event) => e.preventDefault();
+
+    v.addEventListener("ended", onEnd);
+    v.addEventListener("pause", onPause);
+    v.addEventListener("timeupdate", onTime);
+    v.addEventListener("error", onError);
+    v.addEventListener("contextmenu", onCtx);
+
+    holder.replaceChildren(v);
+    ref.current = v;
+
+    return () => {
+      v.removeEventListener("ended", onEnd);
+      v.removeEventListener("pause", onPause);
+      v.removeEventListener("timeupdate", onTime);
+      v.removeEventListener("error", onError);
+      v.removeEventListener("contextmenu", onCtx);
+      v.pause();
+      if (v.parentNode === holder) holder.removeChild(v);
+      ref.current = null;
+    };
+  }, [videoSrc, hasVideo]);
 
   // Reproducción forzada cuando el paso está activo.
   useEffect(() => {
@@ -54,13 +119,16 @@ export default function VideoSlide({ service, isActive, onEnded }: VideoSlidePro
       /* algunos navegadores aún no permiten seek: se ignora */
     }
 
-    // 1) intenta con sonido (hay gesto del usuario al elegir el servicio)
+    // 1) intenta con sonido (si el elemento fue desbloqueado en el gesto, suena)
     v.muted = false;
     const attempt = v.play();
     if (attempt && typeof attempt.then === "function") {
       attempt
         .then(() => setNeedsSound(false))
-        .catch(() => {
+        .catch((err: unknown) => {
+          // Un play() interrumpido por pause() (p. ej. doble montaje de React en
+          // desarrollo) NO es un bloqueo de audio: no silenciamos el video.
+          if ((err as { name?: string } | null)?.name === "AbortError") return;
           // 2) reintenta silenciado (el autoplay muteado casi siempre se permite)
           v.muted = true;
           setNeedsSound(true);
@@ -72,14 +140,6 @@ export default function VideoSlide({ service, isActive, onEnded }: VideoSlidePro
         });
     }
   }, [isActive, videoSrc, hasVideo]);
-
-  // No se puede pausar: si pausan y el paso sigue activo, reanuda.
-  function handlePause() {
-    const v = ref.current;
-    if (v && isActive && !v.ended) {
-      void v.play().catch(() => {});
-    }
-  }
 
   function enableSound() {
     const v = ref.current;
@@ -120,24 +180,8 @@ export default function VideoSlide({ service, isActive, onEnded }: VideoSlidePro
       <div className="video__frame">
         {hasVideo ? (
           <>
-            <video
-              ref={ref}
-              key={videoSrc}
-              src={videoSrc}
-              playsInline
-              preload="auto"
-              poster={VIDEO_POSTER || undefined}
-              disablePictureInPicture
-              controlsList="nodownload noplaybackrate nofullscreen"
-              onContextMenu={(e) => e.preventDefault()}
-              onEnded={onEnded}
-              onPause={handlePause}
-              onTimeUpdate={(e) => {
-                const el = e.currentTarget;
-                if (el.duration) setProgress((el.currentTime / el.duration) * 100);
-              }}
-              onError={() => setFailed(true)}
-            />
+            {/* El <video> se monta aquí de forma imperativa (ver efecto de montaje) */}
+            <div ref={holderRef} style={{ width: "100%", height: "100%" }} />
 
             {/* Barra de progreso (no interactiva) */}
             <div className="video__progress" aria-hidden="true">
