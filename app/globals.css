@@ -833,7 +833,7 @@ html[data-style="institucional"] .btn--ghost:hover { color: #fff; }
 .sched__field { display: flex; flex-direction: column; gap: 8px; }
 .sched__label { font-weight: 700; color: var(--ink); font-size: 13.5px; }
 .sched__date {
-  width: 100%; padding: 13px 15px; font-size: 15.5px; color: var(--ink);
+  width: 100%; padding: 13px 15px; font-size: 16px; color: var(--ink);
   border: 1.5px solid var(--line-strong); border-radius: var(--radius-sm);
   background: var(--surface-2); font-family: var(--font-body);
 }
@@ -912,7 +912,7 @@ html { scroll-behavior: smooth; }
 .rate__label { font-weight: 700; color: var(--ink); font-size: 14px; }
 .rate__label small { color: var(--ink-faint); font-weight: 600; }
 .rate__input {
-  width: 100%; padding: 13px 15px; font-size: 15.5px; color: var(--ink);
+  width: 100%; padding: 13px 15px; font-size: 16px; color: var(--ink);
   border: 1.5px solid var(--line-strong); border-radius: var(--radius-sm);
   background: var(--surface-2); font-family: var(--font-body);
 }

@@ -108,6 +108,7 @@ export default function AgentWidget({ enabled }: { enabled: boolean }) {
   const [busy, setBusy] = useState(false);
   const listRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
   const trackedRef = useRef(false);
 
   // Restaura la conversación de la sesión.
@@ -139,17 +140,61 @@ export default function AgentWidget({ enabled }: { enabled: boolean }) {
     if (open && view === "chat") inputRef.current?.focus();
   }, [open, view]);
 
-  // Esc cierra; bloquea el scroll del fondo mientras está abierto.
+  // Esc cierra. Bloqueo del scroll de fondo a prueba de iOS: el body se fija
+  // conservando la posición, y se restaura al cerrar.
   useEffect(() => {
     if (!open) return;
     const h = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     window.addEventListener("keydown", h);
+    const y = window.scrollY;
+    const b = document.body.style;
+    const prev = { position: b.position, top: b.top, left: b.left, right: b.right, width: b.width };
+    b.position = "fixed";
+    b.top = `-${y}px`;
+    b.left = "0";
+    b.right = "0";
+    b.width = "100%";
     document.documentElement.classList.add("pa-lock");
     return () => {
       window.removeEventListener("keydown", h);
+      b.position = prev.position;
+      b.top = prev.top;
+      b.left = prev.left;
+      b.right = prev.right;
+      b.width = prev.width;
       document.documentElement.classList.remove("pa-lock");
+      window.scrollTo(0, y);
     };
   }, [open]);
+
+  // Móvil: el panel se ajusta al área realmente visible (encima del teclado).
+  // iOS no encoge 100dvh al abrir el teclado; VisualViewport sí lo refleja.
+  useEffect(() => {
+    if (!open) return;
+    const vv = window.visualViewport;
+    const panel = panelRef.current;
+    if (!vv || !panel) return;
+    const mobile = window.matchMedia("(max-width: 640px)");
+    const apply = () => {
+      if (!mobile.matches) {
+        panel.style.removeProperty("--pa-vvh");
+        panel.style.removeProperty("--pa-top");
+        return;
+      }
+      panel.style.setProperty("--pa-vvh", `${Math.round(vv.height)}px`);
+      panel.style.setProperty("--pa-top", `${Math.round(vv.offsetTop)}px`);
+      listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
+    };
+    apply();
+    vv.addEventListener("resize", apply);
+    vv.addEventListener("scroll", apply);
+    mobile.addEventListener("change", apply);
+    return () => {
+      vv.removeEventListener("resize", apply);
+      vv.removeEventListener("scroll", apply);
+      mobile.removeEventListener("change", apply);
+    };
+  }, [open, view]);
 
   const onWa = useCallback(() => trackBrowser("Contact"), []);
 
@@ -256,7 +301,7 @@ export default function AgentWidget({ enabled }: { enabled: boolean }) {
 
       {/* Panel */}
       {open && (
-        <div className="pa-panel" role="dialog" aria-label="Asesor Prime">
+        <div className="pa-panel" role="dialog" aria-label="Asesor Prime" ref={panelRef}>
           {view === "call" ? (
             <CallView onExit={endCall} />
           ) : (
@@ -320,6 +365,8 @@ export default function AgentWidget({ enabled }: { enabled: boolean }) {
                     placeholder="Escribe tu duda…"
                     maxLength={1500}
                     autoComplete="off"
+                    enterKeyHint="send"
+                    onFocus={() => setTimeout(() => listRef.current?.scrollTo({ top: listRef.current.scrollHeight }), 250)}
                   />
                   <button type="button" className="pa-input__mic" onClick={() => setView("call")} aria-label="Hablar por voz">
                     {MicIcon}

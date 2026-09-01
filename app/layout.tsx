@@ -65,6 +65,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  // Android Chrome: el teclado encoge el viewport en vez de tapar el contenido.
+  interactiveWidget: "resizes-content",
   themeColor: "#1b4fa0",
 };
 
