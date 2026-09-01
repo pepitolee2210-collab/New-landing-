@@ -265,6 +265,15 @@ export default function AgentWidget({ enabled }: { enabled: boolean }) {
 
   if (!enabled || !pathname || !SHOW_ON.has(pathname)) return null;
 
+  // El último mensaje de Prime es el "titular"; lo anterior queda como estela atenuada.
+  let lastModelIdx = -1;
+  for (let i = msgs.length - 1; i >= 0; i--) {
+    if (msgs[i]!.role === "model") {
+      lastModelIdx = i;
+      break;
+    }
+  }
+
   return (
     <>
       {/* Lanzador */}
@@ -282,83 +291,119 @@ export default function AgentWidget({ enabled }: { enabled: boolean }) {
 
       {/* Panel */}
       {open && (
-        <div className="pa-panel" role="dialog" aria-label="Asesor Prime">
+        <div className={"pa-panel" + (busy ? " is-thinking" : "")} role="dialog" aria-label="Asesor Prime">
           {view === "call" ? (
             <CallView onExit={endCall} />
           ) : (
             <>
-              <header className="pa-head">
-                <span className="pa-head__ava">
-                  ★<span className="pa-head__dot" />
-                </span>
-                <span className="pa-head__t">
-                  <span className="pa-head__name">Prime</span>
-                  <span className="pa-head__sub">Asesor virtual · responde al instante</span>
-                </span>
-                <button type="button" className="pa-head__call" onClick={() => setView("call")} aria-label="Llamar a Prime">
-                  {Ico.phone}
-                </button>
-                <button type="button" className="pa-head__x" onClick={() => setOpen(false)} aria-label="Cerrar">
+              {/* Aurora de fondo: respira más cuando Prime está pensando */}
+              <div className="pa-aurora" aria-hidden="true">
+                <span className="pa-aurora__a" />
+                <span className="pa-aurora__b" />
+                <span className="pa-aurora__c" />
+              </div>
+
+              <header className="pa-top">
+                <button type="button" className="pa-top__x" onClick={() => setOpen(false)} aria-label="Cerrar">
                   {Ico.close}
+                </button>
+                <span className="pa-top__pill">
+                  <span className="pa-top__star">★</span>
+                  Prime
+                  <span className="pa-top__dot" />
+                  <small>en línea</small>
+                </span>
+                <button type="button" className="pa-top__call" onClick={() => setView("call")} aria-label="Llamar a Prime">
+                  {Ico.phone}
                 </button>
               </header>
 
-              <div className="pa-list" ref={listRef}>
-                {msgs.map((m, i) => (
-                  <div key={m.id} className={"pa-msg pa-msg--" + m.role + (m.error ? " is-error" : "")}>
-                    {m.role === "model" && m.text === "" ? (
-                      <span className="pa-typing" aria-label="Prime está escribiendo">
-                        <i />
-                        <i />
-                        <i />
-                      </span>
-                    ) : m.role === "model" ? (
-                      renderRich(m.text, onWa)
-                    ) : (
-                      m.text
-                    )}
-                    {i === 0 && m.id === "g" && (
-                      <div className="pa-quick">
-                        {QUICK.map((q) => (
-                          <button key={q} type="button" className="pa-chip" onClick={() => quick(q)}>
-                            {q}
-                          </button>
-                        ))}
+              <div className="pa-flow" ref={listRef}>
+                {msgs.map((m, i) => {
+                  if (m.role === "user") {
+                    return (
+                      <div key={m.id} className={"pa-you" + (i < lastModelIdx ? " is-old" : "")}>
+                        {m.text}
                       </div>
-                    )}
-                  </div>
-                ))}
+                    );
+                  }
+                  const latest = i === lastModelIdx;
+                  // Titular grande para respuestas cortas; lectura cómoda para las largas.
+                  const long = m.text.length > 260;
+                  return (
+                    <div
+                      key={m.id}
+                      className={
+                        "pa-say" +
+                        (latest ? " is-latest" : " is-old") +
+                        (latest && long ? " is-long" : "") +
+                        (m.error ? " is-error" : "")
+                      }
+                    >
+                      {m.text === "" ? (
+                        <span className="pa-think" aria-label="Prime está escribiendo">
+                          <i />
+                          Prime está pensando…
+                        </span>
+                      ) : (
+                        renderRich(m.text, onWa)
+                      )}
+                      {i === 0 && m.id === "g" && latest && (
+                        <div className="pa-quick">
+                          {QUICK.map((q, qi) => (
+                            <button
+                              key={q}
+                              type="button"
+                              className={"pa-chip" + (qi === 0 ? " is-primary" : "")}
+                              onClick={() => quick(q)}
+                            >
+                              {q}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
 
               <form
-                className="pa-input"
+                className="pa-composer"
                 onSubmit={(e) => {
                   e.preventDefault();
                   void send(input);
                 }}
               >
-                <div className="pa-input__row">
+                <div className="pa-composer__box">
                   <input
                     ref={inputRef}
-                    className="pa-input__field"
+                    className="pa-composer__field"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    placeholder="Escribe tu duda…"
+                    placeholder="Escribe tu duda o toca el micro…"
                     maxLength={1500}
                     autoComplete="off"
                     enterKeyHint="send"
                     onFocus={keepBottom}
                     onBlur={onInputBlur}
                   />
-                  <button type="button" className="pa-input__mic" onClick={() => setView("call")} aria-label="Hablar por voz">
+                  <button type="button" className="pa-composer__mic" onClick={() => setView("call")} aria-label="Hablar por voz">
                     {MicIcon}
                   </button>
-                  <button type="submit" className="pa-input__send" disabled={!input.trim() || busy} aria-label="Enviar">
+                  <button type="submit" className="pa-composer__send" disabled={!input.trim() || busy} aria-label="Enviar">
                     {Ico.arrow}
                   </button>
                 </div>
-                <span className="pa-input__note">
-                  Prime orienta; no sustituye asesoría legal. Un humano te atiende por WhatsApp si lo pides.
+                <span className="pa-composer__note">
+                  Prime orienta; no sustituye asesoría legal ·{" "}
+                  <a
+                    href={waLink("Hola, quiero hablar con una persona sobre mi trámite.")}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={onWa}
+                  >
+                    hablar con una persona
+                  </a>
                 </span>
               </form>
             </>
