@@ -23,7 +23,9 @@ export type MetaEventName =
   | "Lead"
   | "Contact"
   | "VideoCompleted"
-  | "EvaluationCompleted";
+  | "EvaluationCompleted"
+  | "AgentChat"
+  | "AgentCall";
 
 /** Eventos estándar de Meta (van por `track`). Los demás son custom (`trackCustom`). */
 const STANDARD_EVENTS: ReadonlySet<MetaEventName> = new Set<MetaEventName>([

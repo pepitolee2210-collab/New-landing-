@@ -194,3 +194,20 @@ Copia `.env.example` → `.env.local` (local) o configúralas en Vercel:
 
 El diseño incluye tres temas. Cambia el atributo `data-style` del `<html>` en
 `app/layout.tsx` por `"clasico"`, `"institucional"` o `"moderno"`.
+
+## Prime — asesor virtual (chat + llamada de voz)
+
+Widget "Pregúntale a Prime" en la home y en `/califica` (no aparece en los embudos
+`/slug` para no competir con el botón "Continuar"). Móvil: pantalla completa;
+escritorio: tarjeta flotante.
+
+- **Escribir**: `POST /api/agent/chat` → Gemini `gemini-3.7-flash` con streaming.
+  El modelo conoce los 9 servicios (se le inyectan desde `lib/services.ts`) y puede
+  devolver marcadores `{{svc:slug}}` (tarjeta al servicio) y `{{whatsapp}}` (pase a humano).
+- **Llamar**: `POST /api/agent/voice-token` crea un token efímero (un uso, 15 min) y el
+  navegador abre la **Live API** (`gemini-3.1-flash-live-preview`) con voz bidireccional,
+  interrupciones y transcripción en vivo. La API key nunca sale del servidor.
+- Sin `GEMINI_API_KEY` el widget **no se muestra** en producción. Para verlo en modo vista
+  previa (responde invitando a WhatsApp) pon `AGENT_PREVIEW="1"`.
+- Eventos del Pixel: `AgentChat`, `AgentCall` (custom) y `Contact` al pasar a WhatsApp.
+- Decisiones y fuentes: `docs/evidencia-agente-gemini.md`.

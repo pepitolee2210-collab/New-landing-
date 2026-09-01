@@ -1,9 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { Source_Sans_3, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
+import "./agent.css";
 import { MetaPixel } from "@/components/meta/MetaPixel";
 import { PixelRouteTracker } from "@/components/meta/PixelRouteTracker";
 import { ConsentBanner } from "@/components/meta/ConsentBanner";
+import AgentWidget from "@/components/agent/AgentWidget";
+import { agentEnabled } from "@/lib/agent/server";
 
 const sourceSans = Source_Sans_3({
   subsets: ["latin"],
@@ -73,6 +76,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <MetaPixel />
         <PixelRouteTracker />
         <ConsentBanner />
+        <AgentWidget enabled={agentEnabled || process.env.AGENT_PREVIEW === "1"} />
       </body>
     </html>
   );
