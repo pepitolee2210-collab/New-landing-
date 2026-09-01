@@ -5,12 +5,15 @@
    Flujo: pide un token efímero al servidor → abre la sesión Live
    desde el navegador → micrófono (PCM 16 kHz) ↔ voz de Prime (24 kHz).
    Soporta interrupciones (barge-in) y transcripción en vivo.
+   Visual: "orbe de voz" (VoiceOrb) que reacciona al micrófono y a la
+   voz de Prime mediante AnalyserNodes; la conversación va en el centro.
    ============================================================ */
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { waLink } from "@/lib/config";
 import { trackBrowser } from "@/lib/meta/pixel-client";
 import { Ico } from "../icons";
-import { INPUT_RATE, OUTPUT_RATE, base64ToFloat32, floatTo16BitPCM, int16ToBase64, rms } from "./audio";
+import { INPUT_RATE, OUTPUT_RATE, base64ToFloat32, floatTo16BitPCM, int16ToBase64 } from "./audio";
+import VoiceOrb, { type OrbLevels, type OrbMode } from "./VoiceOrb";
 
 type Status = "connecting" | "listening" | "speaking" | "unavailable" | "error" | "ended";
 
@@ -47,11 +50,22 @@ function fmt(s: number): string {
   return `${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
 }
 
+/** RMS 0..1 (amplificado) de un AnalyserNode. */
+function analyserLevel(an: AnalyserNode | null, buf: Uint8Array<ArrayBuffer>): number {
+  if (!an) return 0;
+  an.getByteTimeDomainData(buf);
+  let sum = 0;
+  for (let i = 0; i < buf.length; i++) {
+    const v = (buf[i]! - 128) / 128;
+    sum += v * v;
+  }
+  return Math.min(1, Math.sqrt(sum / buf.length) * 3.2);
+}
+
 export default function CallView({ onExit }: CallViewProps) {
   const [status, setStatus] = useState<Status>("connecting");
   const [muted, setMuted] = useState(false);
   const [seconds, setSeconds] = useState(0);
-  const [level, setLevel] = useState(0);
   const [userText, setUserText] = useState("");
   const [modelText, setModelText] = useState("");
 
@@ -62,10 +76,22 @@ export default function CallView({ onExit }: CallViewProps) {
   const ctxInRef = useRef<AudioContext | null>(null);
   const ctxOutRef = useRef<AudioContext | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
+  const inAnalyserRef = useRef<AnalyserNode | null>(null);
+  const outAnalyserRef = useRef<AnalyserNode | null>(null);
+  const analyserBuf = useRef<Uint8Array<ArrayBuffer>>(new Uint8Array(new ArrayBuffer(256)));
   const nextPlayRef = useRef(0);
   const sourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
   const newTurnRef = useRef(false);
   const aliveRef = useRef(true);
+
+  // Niveles de audio en vivo para el orbe (se leen a 60 fps sin re-render).
+  const getLevels = useCallback((): OrbLevels => {
+    const buf = analyserBuf.current;
+    return {
+      input: mutedRef.current ? 0 : analyserLevel(inAnalyserRef.current, buf),
+      output: analyserLevel(outAnalyserRef.current, buf),
+    };
+  }, []);
 
   useEffect(() => {
     aliveRef.current = true;
@@ -92,7 +118,7 @@ export default function CallView({ onExit }: CallViewProps) {
       buf.copyToChannel(f32, 0);
       const src = ctx.createBufferSource();
       src.buffer = buf;
-      src.connect(ctx.destination);
+      src.connect(outAnalyserRef.current ?? ctx.destination);
       const start = Math.max(ctx.currentTime, nextPlayRef.current);
       src.start(start);
       nextPlayRef.current = start + buf.duration;
@@ -133,6 +159,13 @@ export default function CallView({ onExit }: CallViewProps) {
         ctxOutRef.current = ctxOut;
         await ctxIn.resume();
         await ctxOut.resume();
+
+        // Analizadores para el orbe: voz de Prime (salida) y micrófono (entrada)
+        const outAn = ctxOut.createAnalyser();
+        outAn.fftSize = 256;
+        outAn.smoothingTimeConstant = 0.6;
+        outAn.connect(ctxOut.destination);
+        outAnalyserRef.current = outAn;
 
         const session = await ai.live.connect({
           model,
@@ -178,16 +211,19 @@ export default function CallView({ onExit }: CallViewProps) {
         });
         sessionRef.current = session;
 
-        // Envío del micrófono en bloques de ~256 ms
+        // Envío del micrófono en bloques de ~256 ms + analizador de entrada
         const source = ctxIn.createMediaStreamSource(stream);
+        const inAn = ctxIn.createAnalyser();
+        inAn.fftSize = 256;
+        inAn.smoothingTimeConstant = 0.5;
+        source.connect(inAn);
+        inAnalyserRef.current = inAn;
+
         const processor = ctxIn.createScriptProcessor(4096, 1, 1);
         processorRef.current = processor;
-        let frame = 0;
         processor.onaudioprocess = (e) => {
-          const input = e.inputBuffer.getChannelData(0);
-          frame++;
-          if (frame % 2 === 0) setLevel(mutedRef.current ? 0 : rms(input));
           if (mutedRef.current) return;
+          const input = e.inputBuffer.getChannelData(0);
           const b64 = int16ToBase64(floatTo16BitPCM(input));
           try {
             session.sendRealtimeInput({ audio: { data: b64, mimeType: `audio/pcm;rate=${INPUT_RATE}` } });
@@ -235,31 +271,35 @@ export default function CallView({ onExit }: CallViewProps) {
     setMuted(mutedRef.current);
   }
 
-  const bars = [0.35, 0.7, 1, 0.55, 0.85, 0.4, 0.75, 0.3];
-  const speaking = status === "speaking";
   const live = status === "listening" || status === "speaking";
+  const orbMode: OrbMode =
+    status === "speaking" ? "speaking" : status === "listening" ? "listening" : status === "connecting" ? "idle" : "off";
 
   const title =
     status === "connecting"
       ? "Conectando con Prime…"
       : status === "listening"
-        ? "Prime está escuchando…"
+        ? "Te escucho"
         : status === "speaking"
-          ? "Prime está hablando"
+          ? "Prime"
           : status === "unavailable"
             ? "Las llamadas llegan muy pronto"
             : status === "ended"
               ? "Llamada finalizada"
-              : "No pudimos conectar la llamada";
+              : "No pudimos conectar";
 
-  const subtitle = live
-    ? "Habla con naturalidad. Puedes interrumpirme cuando quieras."
+  // Texto central: lo último que se dijo (Prime si está hablando; si no, tú).
+  const centerText = live ? (status === "speaking" && modelText ? modelText : userText || modelText) : "";
+  const hint = live
+    ? centerText
+      ? ""
+      : "Habla con naturalidad. Puedes interrumpirme cuando quieras."
     : status === "connecting"
       ? "Permite el micrófono cuando el navegador lo pida."
       : status === "unavailable"
         ? "Mientras tanto, escríbeme aquí o habla con el equipo por WhatsApp."
         : status === "error"
-          ? "Revisa el permiso del micrófono o inténtalo de nuevo. También puedes escribirme."
+          ? "Revisa el permiso del micrófono o inténtalo de nuevo."
           : "";
 
   return (
@@ -267,40 +307,24 @@ export default function CallView({ onExit }: CallViewProps) {
       <div className="pa-call__top">
         <span className={"pa-call__pill" + (live ? " is-live" : "")}>
           <span className="pa-call__dot" />
-          {live ? `En llamada · ${fmt(seconds)}` : "Llamada"}
+          {live ? "En llamada" : status === "connecting" ? "Conectando" : "Llamada"}
         </span>
         <span className="pa-call__lang">ESPAÑOL</span>
       </div>
 
       <div className="pa-call__body">
-        <div className={"pa-call__rings" + (speaking ? " is-speaking" : "")}>
-          <span className="pa-ring pa-ring--1" />
-          <span className="pa-ring pa-ring--2" />
-          <span className="pa-ring pa-ring--3" />
-          <span className="pa-call__glow" />
-          <span className="pa-call__avatar">★</span>
-        </div>
-
-        <div className="pa-call__titles">
-          <span className="pa-call__title">{title}</span>
-          {subtitle && <span className="pa-call__sub">{subtitle}</span>}
-        </div>
-
-        {live && (userText || modelText) && (
-          <div className="pa-call__caption">
-            <span className="pa-call__caption-k">Transcripción en vivo</span>
-            {userText && (
-              <span>
-                <strong>Tú:</strong> {userText}
-              </span>
+        <div className="pa-orbwrap">
+          <VoiceOrb mode={orbMode} getLevels={getLevels} />
+          <div className="pa-orb__center">
+            <span className={"pa-orb__who" + (status === "speaking" ? " is-prime" : "")}>{title}</span>
+            {centerText ? (
+              <span className="pa-orb__text">{centerText}</span>
+            ) : (
+              hint && <span className="pa-orb__hint">{hint}</span>
             )}
-            {modelText && (
-              <span>
-                <strong>Prime:</strong> {modelText}
-              </span>
-            )}
+            {live && <span className="pa-orb__time">{fmt(seconds)}</span>}
           </div>
-        )}
+        </div>
 
         {(status === "unavailable" || status === "error") && (
           <a
@@ -312,17 +336,6 @@ export default function CallView({ onExit }: CallViewProps) {
           >
             {Ico.whatsapp} Hablar por WhatsApp
           </a>
-        )}
-
-        {live && (
-          <div className="pa-bars" aria-hidden="true">
-            {bars.map((b, i) => (
-              <span
-                key={i}
-                style={{ height: `${Math.max(6, Math.round(34 * b * (speaking ? 0.9 : 0.25 + level * 1.6)))}px` }}
-              />
-            ))}
-          </div>
         )}
       </div>
 
