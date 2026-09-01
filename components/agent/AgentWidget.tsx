@@ -108,7 +108,6 @@ export default function AgentWidget({ enabled }: { enabled: boolean }) {
   const [busy, setBusy] = useState(false);
   const listRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const panelRef = useRef<HTMLDivElement | null>(null);
   const trackedRef = useRef(false);
 
   // Restaura la conversación de la sesión.
@@ -167,34 +166,16 @@ export default function AgentWidget({ enabled }: { enabled: boolean }) {
     };
   }, [open]);
 
-  // Móvil: el panel se ajusta al área realmente visible (encima del teclado).
-  // iOS no encoge 100dvh al abrir el teclado; VisualViewport sí lo refleja.
-  useEffect(() => {
-    if (!open) return;
-    const vv = window.visualViewport;
-    const panel = panelRef.current;
-    if (!vv || !panel) return;
-    const mobile = window.matchMedia("(max-width: 640px)");
-    const apply = () => {
-      if (!mobile.matches) {
-        panel.style.removeProperty("--pa-vvh");
-        panel.style.removeProperty("--pa-top");
-        return;
-      }
-      panel.style.setProperty("--pa-vvh", `${Math.round(vv.height)}px`);
-      panel.style.setProperty("--pa-top", `${Math.round(vv.offsetTop)}px`);
-      listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
-    };
-    apply();
-    vv.addEventListener("resize", apply);
-    vv.addEventListener("scroll", apply);
-    mobile.addEventListener("change", apply);
-    return () => {
-      vv.removeEventListener("resize", apply);
-      vv.removeEventListener("scroll", apply);
-      mobile.removeEventListener("change", apply);
-    };
-  }, [open, view]);
+  // Teclado en móvil: no se mide nada por JS (provocaba huecos y saltos).
+  // El navegador panea nativamente hasta el campo; solo mantenemos la
+  // conversación al final y reponemos la vista al cerrar el teclado.
+  const keepBottom = useCallback(() => {
+    setTimeout(() => listRef.current?.scrollTo({ top: listRef.current.scrollHeight }), 300);
+  }, []);
+  const onInputBlur = useCallback(() => {
+    // iOS puede dejar la vista desplazada tras cerrar el teclado.
+    setTimeout(() => window.scrollTo(0, 0), 60);
+  }, []);
 
   const onWa = useCallback(() => trackBrowser("Contact"), []);
 
@@ -301,7 +282,7 @@ export default function AgentWidget({ enabled }: { enabled: boolean }) {
 
       {/* Panel */}
       {open && (
-        <div className="pa-panel" role="dialog" aria-label="Asesor Prime" ref={panelRef}>
+        <div className="pa-panel" role="dialog" aria-label="Asesor Prime">
           {view === "call" ? (
             <CallView onExit={endCall} />
           ) : (
@@ -366,7 +347,8 @@ export default function AgentWidget({ enabled }: { enabled: boolean }) {
                     maxLength={1500}
                     autoComplete="off"
                     enterKeyHint="send"
-                    onFocus={() => setTimeout(() => listRef.current?.scrollTo({ top: listRef.current.scrollHeight }), 250)}
+                    onFocus={keepBottom}
+                    onBlur={onInputBlur}
                   />
                   <button type="button" className="pa-input__mic" onClick={() => setView("call")} aria-label="Hablar por voz">
                     {MicIcon}

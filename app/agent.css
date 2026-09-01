@@ -249,10 +249,10 @@ html.pa-lock { overflow: hidden; }
   .pa-launch__txt small { display: none; }
   .pa-launch__txt strong { font-size: 13.5px; }
   .pa-panel {
-    /* Se ajusta al área visible: con el teclado abierto, --pa-vvh y --pa-top
-       los fija el widget desde VisualViewport (iOS no encoge 100dvh). */
-    inset: auto 0 0 0; top: var(--pa-top, 0px); width: auto;
-    height: var(--pa-vvh, 100dvh); border-radius: 0;
+    /* Pantalla completa SIN medir el teclado por JS: al enfocar el campo, iOS
+       panea de forma nativa hasta él y Android (interactive-widget) encoge
+       el viewport. Nada salta ni deja huecos. */
+    inset: 0; width: auto; height: 100%; border-radius: 0;
     animation-name: paUp;
   }
   @keyframes paUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
