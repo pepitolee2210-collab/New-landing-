@@ -1,10 +1,10 @@
 /* ============================================================
    /terminos — Términos y Condiciones
-   Texto base en español claro. Los [COMPLETAR] deben llenarse y el
-   documento debe revisarlo un abogado con licencia antes de publicar.
+   Texto base en español claro con los datos de USA LATINO PRIME LLC.
+   Un abogado con licencia debe revisarlo antes de darlo por definitivo.
    ============================================================ */
 import type { Metadata } from "next";
-import LegalPage, { Fill } from "@/components/legal/LegalPage";
+import LegalPage from "@/components/legal/LegalPage";
 import { WHATSAPP_DISPLAY } from "@/lib/config";
 
 const UPDATED = "2 de septiembre de 2026";
@@ -41,7 +41,7 @@ export default function TerminosPage() {
       </p>
       <p>
         Estos Términos regulan el uso del sitio <strong>usalatinoprime.com</strong> y de la plataforma operada por{" "}
-        <Fill>razón social de la empresa</Fill>, con domicilio en <Fill>dirección legal</Fill> (en adelante,
+        <strong>USA LATINO PRIME LLC</strong>, con domicilio en 10951 N. Town Center Drive, Highland, Utah 84003 (en adelante,
         &quot;UsaLatinoPrime&quot;, &quot;nosotros&quot;). Al usar el sitio o contratar un servicio aceptas estos
         Términos. Si no estás de acuerdo con alguna parte, no uses la plataforma.
       </p>
@@ -146,14 +146,14 @@ export default function TerminosPage() {
 
       <h2>11. Ley aplicable y contacto</h2>
       <p>
-        Estos Términos se rigen por las leyes del estado de <Fill>estado de jurisdicción</Fill>, Estados Unidos, sin
+        Estos Términos se rigen por las leyes del estado de Utah, Estados Unidos, sin
         perjuicio de los derechos que te correspondan como consumidor en tu lugar de residencia. Cualquier controversia
         intentaremos resolverla primero de buena fe; si no es posible, se someterá a los tribunales competentes de{" "}
-        <Fill>ciudad y estado</Fill>.
+        Highland, Utah.
       </p>
       <p>
-        Contacto: <Fill>correo electrónico legal</Fill> · WhatsApp {WHATSAPP_DISPLAY} ·{" "}
-        <Fill>dirección postal</Fill>.
+        Contacto: <a href="mailto:henryorellana@usalatinoprime.com">henryorellana@usalatinoprime.com</a> · WhatsApp {WHATSAPP_DISPLAY} ·{" "}
+        10951 N. Town Center Drive, Highland, Utah 84003.
       </p>
     </LegalPage>
   );

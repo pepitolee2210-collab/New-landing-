@@ -3,11 +3,11 @@
    Declara SOLO lo que el sitio hace de verdad (revisado en el código):
    Meta Pixel + Conversions API, cookie propia ulp_vid, asistente Prime
    (Google Gemini), reseñas (Supabase), alojamiento (Vercel), WhatsApp.
-   Los [COMPLETAR] deben llenarse y un abogado con licencia debe
-   revisar el texto antes de publicarlo.
+   Datos de USA LATINO PRIME LLC ya incluidos. Un abogado con licencia
+   debe revisar el texto antes de darlo por definitivo.
    ============================================================ */
 import type { Metadata } from "next";
-import LegalPage, { Fill } from "@/components/legal/LegalPage";
+import LegalPage from "@/components/legal/LegalPage";
 import { WHATSAPP_DISPLAY } from "@/lib/config";
 
 const UPDATED = "2 de septiembre de 2026";
@@ -31,8 +31,8 @@ export default function PrivacidadPage() {
     >
       <h2>1. Quién trata tus datos</h2>
       <p>
-        El responsable del tratamiento es <Fill>razón social de la empresa</Fill>, con domicilio en{" "}
-        <Fill>dirección legal</Fill> (&quot;UsaLatinoPrime&quot;, &quot;nosotros&quot;). Somos una empresa de
+        El responsable del tratamiento es <strong>USA LATINO PRIME LLC</strong>, con domicilio en{" "}
+        10951 N. Town Center Drive, Highland, Utah 84003 (&quot;UsaLatinoPrime&quot;, &quot;nosotros&quot;). Somos una empresa de
         tecnología y servicios administrativos: no somos un bufete ni damos asesoría legal. Esta política aplica al
         sitio <strong>usalatinoprime.com</strong> y a la plataforma con la que gestionas tu trámite.
       </p>
@@ -115,7 +115,7 @@ export default function PrivacidadPage() {
           <strong>Mensajería:</strong> WhatsApp, cuando eliges escribirnos por ese canal (aplica su propia política).
         </li>
         <li>
-          <strong>Procesamiento de pagos:</strong> <Fill>proveedor de pagos de la plataforma</Fill>, que recibe los
+          <strong>Procesamiento de pagos:</strong> Stripe, que recibe los
           datos de pago directamente; nosotros no almacenamos los números completos de tu tarjeta.
         </li>
       </ul>
@@ -165,7 +165,7 @@ export default function PrivacidadPage() {
       <h2>8. Tus derechos</h2>
       <p>
         Puedes pedirnos en cualquier momento acceder a tus datos, corregirlos, eliminarlos o retirar una reseña.
-        Escríbenos a <Fill>correo de contacto para privacidad</Fill> o por WhatsApp al {WHATSAPP_DISPLAY} y te
+        Escríbenos a <a href="mailto:henryorellana@usalatinoprime.com">henryorellana@usalatinoprime.com</a> o por WhatsApp al {WHATSAPP_DISPLAY} y te
         responderemos en un plazo razonable. Podemos pedirte que verifiques tu identidad antes de atender la solicitud.
       </p>
 
@@ -184,8 +184,8 @@ export default function PrivacidadPage() {
 
       <h2>11. Contacto</h2>
       <p>
-        <Fill>razón social de la empresa</Fill> · <Fill>dirección postal</Fill> ·{" "}
-        <Fill>correo de contacto para privacidad</Fill> · WhatsApp {WHATSAPP_DISPLAY}.
+        <strong>USA LATINO PRIME LLC</strong> · 10951 N. Town Center Drive, Highland, Utah 84003 ·{" "}
+        <a href="mailto:henryorellana@usalatinoprime.com">henryorellana@usalatinoprime.com</a> · WhatsApp {WHATSAPP_DISPLAY}.
       </p>
     </LegalPage>
   );
