@@ -23,14 +23,12 @@
 }
 
 html.pa-lock { overflow: hidden; }
-/* Con el panel abierto, el FAB de WhatsApp se oculta (el panel ya ofrece WhatsApp). */
-html.pa-lock .lp-fab { display: none; }
 
 /* ============================================================
    LANZADOR
    ============================================================ */
 .pa-launch {
-  position: fixed; right: 18px; bottom: calc(86px + env(safe-area-inset-bottom)); z-index: 71;
+  position: fixed; right: 20px; bottom: calc(22px + env(safe-area-inset-bottom)); z-index: 71;
   display: inline-flex; align-items: center; gap: 10px;
   background: var(--pa-navy); color: #fff;
   border: 1px solid rgba(239, 196, 77, .35);
@@ -342,7 +340,7 @@ html.pa-lock .lp-fab { display: none; }
    MÓVIL — pantalla completa (el teclado se maneja de forma nativa)
    ============================================================ */
 @media (max-width: 640px) {
-  .pa-launch { right: 14px; bottom: calc(84px + env(safe-area-inset-bottom)); padding: 6px 14px 6px 6px; }
+  .pa-launch { right: 14px; bottom: calc(16px + env(safe-area-inset-bottom)); padding: 6px 14px 6px 6px; }
   .pa-launch__txt small { display: none; }
   .pa-launch__txt strong { font-size: 13.5px; }
   .pa-panel {
@@ -355,7 +353,6 @@ html.pa-lock .lp-fab { display: none; }
   .pa-say.is-long { font-size: clamp(17px, 4.8vw, 19px); }
   .pa-orbwrap { width: min(100%, 460px); }
   .pa-orb__text { font-size: clamp(18px, 5.6vw, 24px); }
-  .lp-fab { bottom: calc(18px + env(safe-area-inset-bottom)); }
 }
 
 @media (prefers-reduced-motion: reduce) {

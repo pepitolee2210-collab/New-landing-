@@ -11,7 +11,6 @@ import AppSection from "@/components/home/AppSection";
 import ReviewsSection from "@/components/home/ReviewsSection";
 import CtaBand from "@/components/home/CtaBand";
 import SiteFooter from "@/components/home/SiteFooter";
-import WhatsAppFab from "@/components/home/WhatsAppFab";
 import HomeFX from "@/components/home/HomeFX";
 import { listApprovedReviews, reviewsEnabled } from "@/lib/reviews";
 
@@ -33,7 +32,6 @@ export default async function HomePage() {
         <CtaBand />
       </main>
       <SiteFooter />
-      <WhatsAppFab />
       <HomeFX />
     </div>
   );
