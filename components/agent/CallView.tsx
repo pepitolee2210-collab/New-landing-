@@ -4,14 +4,19 @@
    Prime — modo LLAMADA (voz en tiempo real con la Live API)
    Flujo: pide un token efímero al servidor → abre la sesión Live
    desde el navegador → micrófono (PCM 16 kHz) ↔ voz de Prime (24 kHz).
-   Soporta interrupciones (barge-in) y transcripción en vivo.
-   Visual: "orbe de voz" (VoiceOrb) que reacciona al micrófono y a la
-   voz de Prime mediante AnalyserNodes; la conversación va en el centro.
+   Soporta interrupciones (barge-in).
+   Visual: "orbe de voz" (VoiceOrb) que reacciona al audio. No se
+   muestra la transcripción: en su lugar, cuando Prime recomienda un
+   servicio (herramienta recomendar_servicio) o pasa a una persona
+   (pasar_a_humano), aparecen los botones en pantalla.
    ============================================================ */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { waLink } from "@/lib/config";
 import { trackBrowser } from "@/lib/meta/pixel-client";
+import { getServiceBySlug } from "@/lib/services";
+import { TOOL_HUMAN, TOOL_RECOMMEND, VOICE_TOOLS, detectServiceSlug } from "@/lib/agent/voice-tools";
 import { Ico } from "../icons";
+import ServiceLink from "../ServiceLink";
 import { INPUT_RATE, OUTPUT_RATE, base64ToFloat32, floatTo16BitPCM, int16ToBase64 } from "./audio";
 import VoiceOrb, { type OrbLevels, type OrbMode } from "./VoiceOrb";
 
@@ -25,6 +30,7 @@ interface CallViewProps {
 interface LiveSessionLike {
   close: () => void;
   sendRealtimeInput: (p: { audio: { data: string; mimeType: string } }) => void;
+  sendToolResponse: (p: { functionResponses: Array<{ id?: string; name?: string; response?: Record<string, unknown> }> }) => void;
 }
 
 const MicIcon = (
@@ -66,8 +72,9 @@ export default function CallView({ onExit }: CallViewProps) {
   const [status, setStatus] = useState<Status>("connecting");
   const [muted, setMuted] = useState(false);
   const [seconds, setSeconds] = useState(0);
-  const [userText, setUserText] = useState("");
-  const [modelText, setModelText] = useState("");
+  /** slugs de servicios recomendados por Prime durante la llamada */
+  const [suggested, setSuggested] = useState<string[]>([]);
+  const [human, setHuman] = useState(false);
 
   const mutedRef = useRef(false);
   const secondsRef = useRef(0);
@@ -81,16 +88,25 @@ export default function CallView({ onExit }: CallViewProps) {
   const analyserBuf = useRef<Uint8Array<ArrayBuffer>>(new Uint8Array(new ArrayBuffer(256)));
   const nextPlayRef = useRef(0);
   const sourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
-  const newTurnRef = useRef(false);
+  const turnTextRef = useRef("");
   const aliveRef = useRef(true);
 
-  // Niveles de audio en vivo para el orbe (se leen a 60 fps sin re-render).
   const getLevels = useCallback((): OrbLevels => {
     const buf = analyserBuf.current;
     return {
       input: mutedRef.current ? 0 : analyserLevel(inAnalyserRef.current, buf),
       output: analyserLevel(outAnalyserRef.current, buf),
     };
+  }, []);
+
+  const addSuggestion = useCallback((slug: string) => {
+    if (!getServiceBySlug(slug)) return;
+    setSuggested((cur) => (cur.includes(slug) || cur.length >= 2 ? cur : [...cur, slug]));
+    try {
+      navigator.vibrate?.(12);
+    } catch {
+      /* sin háptica */
+    }
   }, []);
 
   useEffect(() => {
@@ -143,7 +159,6 @@ export default function CallView({ onExit }: CallViewProps) {
         const { GoogleGenAI, Modality } = await import("@google/genai");
         const ai = new GoogleGenAI({ apiKey: token, httpOptions: { apiVersion: "v1alpha" } });
 
-        // Micrófono
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true },
         });
@@ -160,7 +175,6 @@ export default function CallView({ onExit }: CallViewProps) {
         await ctxIn.resume();
         await ctxOut.resume();
 
-        // Analizadores para el orbe: voz de Prime (salida) y micrófono (entrada)
         const outAn = ctxOut.createAnalyser();
         outAn.fftSize = 256;
         outAn.smoothingTimeConstant = 0.6;
@@ -171,8 +185,8 @@ export default function CallView({ onExit }: CallViewProps) {
           model,
           config: {
             responseModalities: [Modality.AUDIO],
-            inputAudioTranscription: {},
             outputAudioTranscription: {},
+            tools: VOICE_TOOLS,
           },
           callbacks: {
             onopen: () => {
@@ -180,26 +194,47 @@ export default function CallView({ onExit }: CallViewProps) {
             },
             onmessage: (msg) => {
               if (!aliveRef.current) return;
+
+              // Herramientas: Prime pide dibujar botones en pantalla.
+              const calls = msg.toolCall?.functionCalls;
+              if (calls && calls.length > 0) {
+                for (const fc of calls) {
+                  if (fc.name === TOOL_RECOMMEND) {
+                    const slug = String((fc.args as { slug?: unknown } | undefined)?.slug ?? "");
+                    addSuggestion(slug);
+                  } else if (fc.name === TOOL_HUMAN) {
+                    setHuman(true);
+                  }
+                }
+                try {
+                  session.sendToolResponse({
+                    functionResponses: calls.map((fc) => ({
+                      id: fc.id,
+                      name: fc.name,
+                      response: { ok: true, mostrado_en_pantalla: true },
+                    })),
+                  });
+                } catch {
+                  /* sesión cerrada */
+                }
+              }
+
               const sc = msg.serverContent;
               if (!sc) return;
               if (sc.interrupted) flushPlayback();
-              const inT = sc.inputTranscription?.text;
-              if (inT) {
-                if (newTurnRef.current) {
-                  newTurnRef.current = false;
-                  setUserText("");
-                  setModelText("");
-                }
-                setUserText((t) => t + inT);
-              }
               const outT = sc.outputTranscription?.text;
-              if (outT) setModelText((t) => t + outT);
+              if (outT) turnTextRef.current += outT;
               const parts = sc.modelTurn?.parts ?? [];
               for (const p of parts) {
                 const data = p.inlineData?.data;
                 if (data) playChunk(data);
               }
-              if (sc.turnComplete) newTurnRef.current = true;
+              if (sc.turnComplete) {
+                // Respaldo: si Prime nombró un servicio sin usar la herramienta, lo mostramos igual.
+                const slug = detectServiceSlug(turnTextRef.current);
+                if (slug) addSuggestion(slug);
+                turnTextRef.current = "";
+              }
             },
             onerror: () => {
               if (aliveRef.current) setStatus("error");
@@ -211,7 +246,6 @@ export default function CallView({ onExit }: CallViewProps) {
         });
         sessionRef.current = session;
 
-        // Envío del micrófono en bloques de ~256 ms + analizador de entrada
         const source = ctxIn.createMediaStreamSource(stream);
         const inAn = ctxIn.createAnalyser();
         inAn.fftSize = 256;
@@ -264,7 +298,7 @@ export default function CallView({ onExit }: CallViewProps) {
       void ctxInRef.current?.close();
       void ctxOutRef.current?.close();
     };
-  }, []);
+  }, [addSuggestion]);
 
   function toggleMute() {
     mutedRef.current = !mutedRef.current;
@@ -274,6 +308,7 @@ export default function CallView({ onExit }: CallViewProps) {
   const live = status === "listening" || status === "speaking";
   const orbMode: OrbMode =
     status === "speaking" ? "speaking" : status === "listening" ? "listening" : status === "connecting" ? "idle" : "off";
+  const hasCards = suggested.length > 0 || human;
 
   const title =
     status === "connecting"
@@ -288,12 +323,10 @@ export default function CallView({ onExit }: CallViewProps) {
               ? "Llamada finalizada"
               : "No pudimos conectar";
 
-  // Texto central: lo último que se dijo (Prime si está hablando; si no, tú).
-  const centerText = live ? (status === "speaking" && modelText ? modelText : userText || modelText) : "";
   const hint = live
-    ? centerText
-      ? ""
-      : "Habla con naturalidad. Puedes interrumpirme cuando quieras."
+    ? hasCards
+      ? "Cuando quieras, toca el botón para continuar."
+      : "Cuéntame tu caso. Puedes interrumpirme cuando quieras."
     : status === "connecting"
       ? "Permite el micrófono cuando el navegador lo pida."
       : status === "unavailable"
@@ -303,11 +336,11 @@ export default function CallView({ onExit }: CallViewProps) {
           : "";
 
   return (
-    <div className="pa-call">
+    <div className={"pa-call" + (hasCards ? " has-cards" : "")}>
       <div className="pa-call__top">
         <span className={"pa-call__pill" + (live ? " is-live" : "")}>
           <span className="pa-call__dot" />
-          {live ? "En llamada" : status === "connecting" ? "Conectando" : "Llamada"}
+          {live ? `En llamada · ${fmt(seconds)}` : status === "connecting" ? "Conectando" : "Llamada"}
         </span>
         <span className="pa-call__lang">ESPAÑOL</span>
       </div>
@@ -317,14 +350,40 @@ export default function CallView({ onExit }: CallViewProps) {
           <VoiceOrb mode={orbMode} getLevels={getLevels} />
           <div className="pa-orb__center">
             <span className={"pa-orb__who" + (status === "speaking" ? " is-prime" : "")}>{title}</span>
-            {centerText ? (
-              <span className="pa-orb__text">{centerText}</span>
-            ) : (
-              hint && <span className="pa-orb__hint">{hint}</span>
-            )}
-            {live && <span className="pa-orb__time">{fmt(seconds)}</span>}
+            {hint && <span className="pa-orb__hint">{hint}</span>}
           </div>
         </div>
+
+        {/* Botones que Prime deja en pantalla durante la llamada */}
+        {hasCards && (
+          <div className="pa-call__suggest">
+            {suggested.length > 0 && <span className="pa-call__suggest-k">Tu trámite recomendado</span>}
+            {suggested.map((slug) => {
+              const svc = getServiceBySlug(slug);
+              if (!svc) return null;
+              return (
+                <ServiceLink key={slug} href={`/${svc.slug}`} video={svc.video} className="pa-card pa-pop">
+                  <span className="pa-card__t">
+                    <span className="pa-card__name">{svc.name}</span>
+                    <span className="pa-card__sub">Calificar ahora · 2 min</span>
+                  </span>
+                  {Ico.arrow}
+                </ServiceLink>
+              );
+            })}
+            {human && (
+              <a
+                className="pa-btn pa-btn--wa pa-pop"
+                href={waLink("Hola, vengo de la llamada con Prime y quiero hablar con una persona sobre mi trámite.")}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => trackBrowser("Contact")}
+              >
+                {Ico.whatsapp} Hablar con una persona
+              </a>
+            )}
+          </div>
+        )}
 
         {(status === "unavailable" || status === "error") && (
           <a

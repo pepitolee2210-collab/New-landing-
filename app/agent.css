@@ -315,6 +315,14 @@ html.pa-lock { overflow: hidden; }
   text-shadow: 0 4px 30px rgba(4, 18, 43, .9);
 }
 .pa-orb__hint { font-size: 13px; line-height: 1.45; color: rgba(255,255,255,.72); max-width: 26ch; }
+
+/* Botones que Prime deja en pantalla durante la llamada */
+.pa-call.has-cards .pa-orbwrap { width: min(100%, 300px); }
+.pa-call.has-cards .pa-orb__who { font-size: 10px; }
+.pa-call__suggest { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 10px; text-align: left; }
+.pa-call__suggest-k { font-family: var(--pa-mono); font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--pa-gold-2); }
+.pa-call__suggest .pa-card { background: rgba(255,255,255,.08); }
+.pa-call__suggest .pa-btn--wa { align-self: stretch; }
 .pa-orb__time { font-family: var(--pa-mono); font-size: 13px; letter-spacing: .1em; color: var(--pa-gold-2); font-variant-numeric: tabular-nums; margin-top: 4px; }
 
 .pa-call__controls { flex: 0 0 auto; padding: 8px 22px calc(24px + env(safe-area-inset-bottom)); display: flex; align-items: flex-start; justify-content: center; gap: 22px; }
