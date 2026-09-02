@@ -262,6 +262,14 @@ export default function AgentWidget({ enabled }: { enabled: boolean }) {
     }
   }, [open, view]);
 
+  // Al navegar a una página donde el widget no se muestra (p. ej. tocar la
+  // tarjeta de un servicio), el panel se cierra de verdad para que el fondo
+  // se descongele; si no, la página nueva quedaba en blanco dentro de un
+  // body fijo y desplazado.
+  useEffect(() => {
+    if (open && (!pathname || !SHOW_ON.has(pathname))) setOpen(false);
+  }, [pathname, open]);
+
   // Esc cierra. Bloqueo del scroll de fondo a prueba de iOS: el body se fija
   // conservando la posición, y se restaura al cerrar.
   useEffect(() => {
@@ -269,6 +277,7 @@ export default function AgentWidget({ enabled }: { enabled: boolean }) {
     const h = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     window.addEventListener("keydown", h);
     const y = window.scrollY;
+    const lockedPath = window.location.pathname;
     const b = document.body.style;
     const prev = { position: b.position, top: b.top, left: b.left, right: b.right, width: b.width };
     b.position = "fixed";
@@ -285,7 +294,8 @@ export default function AgentWidget({ enabled }: { enabled: boolean }) {
       b.right = prev.right;
       b.width = prev.width;
       document.documentElement.classList.remove("pa-lock");
-      window.scrollTo(0, y);
+      // Misma página: vuelve a donde estaba. Página nueva: arriba del todo.
+      window.scrollTo(0, window.location.pathname === lockedPath ? y : 0);
     };
   }, [open]);
 
