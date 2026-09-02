@@ -27,7 +27,7 @@ interface Msg {
 }
 
 const GREETING =
-  "Hola, soy Prime, el asesor de USA Latino Prime. Puedo resolver tus dudas sobre tu trámite. ¿En qué te ayudo?";
+  "Hola, soy Prime, el asistente automático de USA Latino Prime. No soy abogado ni doy asesoría legal: te oriento y te llevo al trámite que te corresponde. ¿En qué te ayudo?";
 const QUICK = ["¿Califico para asilo?", "¿Cuánto cuesta?", "Visa Juvenil", "Hablar con una persona"];
 const FALLBACK =
   "Estoy terminando de configurarme y todavía no puedo responder aquí. Escríbenos por WhatsApp y una persona del equipo te ayuda ahora mismo. {{whatsapp}}";
@@ -579,7 +579,7 @@ export default function AgentWidget({ enabled }: { enabled: boolean }) {
                   )}
                 </div>
                 <span className="pa-composer__note">
-                  Prime orienta; no sustituye asesoría legal ·{" "}
+                  Prime es un asistente automatizado; no brinda asesoría legal ·{" "}
                   <a
                     href={waLink("Hola, quiero hablar con una persona sobre mi trámite.")}
                     target="_blank"
