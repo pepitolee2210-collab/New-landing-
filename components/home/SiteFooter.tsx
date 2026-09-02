@@ -43,7 +43,11 @@ export default function SiteFooter() {
         </div>
       </div>
       <div className="lp-footer__bottom">
-        © {year} USA Latino Prime — Todos los derechos reservados
+        <span>© {year} USA Latino Prime — Todos los derechos reservados</span>
+        <span className="lp-footer__legal">
+          <Link href="/terminos">Términos y Condiciones</Link>
+          <Link href="/privacidad">Política de Privacidad</Link>
+        </span>
       </div>
     </footer>
   );

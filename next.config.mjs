@@ -22,6 +22,8 @@ const nextConfig = {
         "taxes",
         "declaraciondeimpuestos",
       ],
+      terminos: ["terminos-y-condiciones", "terminos-condiciones"],
+      privacidad: ["politica-de-privacidad", "privacidad-politica"],
     };
     return Object.entries(map).flatMap(([canonical, aliases]) =>
       aliases.map((alias) => ({
