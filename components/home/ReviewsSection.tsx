@@ -32,7 +32,7 @@ function Stars({ rating }: { rating: number }) {
 
 function reviewDate(iso: string): string {
   try {
-    return new Intl.DateTimeFormat("es-US", { month: "long", year: "numeric" }).format(new Date(iso));
+    return new Intl.DateTimeFormat("es-US", { day: "numeric", month: "short", year: "numeric" }).format(new Date(iso));
   } catch {
     return "";
   }
