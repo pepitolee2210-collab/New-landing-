@@ -12,7 +12,7 @@
    ============================================================ */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Advisor, Lead } from "@/lib/advisors";
-import { getServiceById } from "@/lib/services";
+import { getServiceById, getServiceBySlug } from "@/lib/services";
 import { LEAD_KIND_LABEL, formatPhone, type LeadKind } from "@/lib/wa-route";
 import { Ico } from "../icons";
 
@@ -437,7 +437,10 @@ export default function LeadsPanel() {
               <tbody>
                 {visible.map((l) => {
                   const adv = advisors.find((a) => a.id === l.advisor_id);
-                  const svc = l.service_id ? getServiceById(l.service_id) : undefined;
+                  // Servicio explícito (cita / urgente) o deducido de la página del servicio.
+                  const svc =
+                    (l.service_id ? getServiceById(l.service_id) : undefined) ??
+                    (l.path ? getServiceBySlug(l.path.replace(/^\/+|\/+$/g, "")) : undefined);
                   const d = new Date(l.created_at);
                   return (
                     <tr key={l.id} className={isLead(l) ? "" : "ld__tr--repeat"}>
