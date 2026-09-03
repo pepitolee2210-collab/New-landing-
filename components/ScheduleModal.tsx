@@ -9,8 +9,8 @@
    Ambos terminan en un mensaje predeterminado a WhatsApp.
    ============================================================ */
 import { useEffect, useState } from "react";
-import { waLink } from "@/lib/config";
 import type { Service } from "@/lib/types";
+import { waRoute } from "@/lib/wa-route";
 import { Ico } from "./icons";
 
 interface ScheduleModalProps {
@@ -69,12 +69,14 @@ export default function ScheduleModal({ service, onContact, onClose }: ScheduleM
   // Sólo se construye con fecha y franja válidas: prettyDate() sobre una
   // fecha vacía daría un "Invalid Date" y romper Intl.DateTimeFormat.
   const appointmentLink = ready
-    ? waLink(
-        `Hola UsaLatinoPrime 👋 Quiero AGENDAR UNA CITA para el servicio: ${service.name}. ` +
+    ? waRoute({
+        kind: "cita",
+        serviceId: service.id,
+        message:
+          `Hola UsaLatinoPrime 👋 Quiero AGENDAR UNA CITA para el servicio: ${service.name}. ` +
           `Me acomoda el ${prettyDate(date)} en la ${SLOTS.find((s) => s.id === slot)!.label.toLowerCase()} ` +
           `(${SLOTS.find((s) => s.id === slot)!.hint}). ¿Me confirman disponibilidad?`,
-        service.whatsappDigits,
-      )
+      })
     : undefined;
 
   return (
@@ -91,7 +93,7 @@ export default function ScheduleModal({ service, onContact, onClose }: ScheduleM
 
             <a
               className="sched-opt sched-opt--urgent"
-              href={waLink(urgentMsg, service.whatsappDigits)}
+              href={waRoute({ kind: "urgente", serviceId: service.id, message: urgentMsg })}
               target="_blank"
               rel="noopener noreferrer"
               onClick={onContact}

@@ -6,7 +6,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { WHATSAPP_DIGITS, WHATSAPP_DISPLAY } from "@/lib/config";
+import { waRoute } from "@/lib/wa-route";
 import { trackBrowser } from "@/lib/meta/pixel-client";
 import { Ico } from "../icons";
 
@@ -42,13 +42,13 @@ export default function LpHeader() {
         </nav>
         <a
           className="lp-header__wa"
-          href={`https://wa.me/${WHATSAPP_DIGITS}`}
+          href={waRoute()}
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => trackBrowser("Contact")}
         >
           {Ico.whatsapp}
-          <span className="lp-header__wa-num">{WHATSAPP_DISPLAY}</span>
+          <span className="lp-header__wa-num">Escríbenos</span>
         </a>
       </div>
     </header>

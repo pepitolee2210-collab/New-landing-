@@ -4,7 +4,6 @@
    exactamente los servicios (nombres, slugs, descripciones) del sitio.
    Sin secretos: este módulo es seguro en servidor.
    ============================================================ */
-import { WHATSAPP_DISPLAY } from "@/lib/config";
 import { SERVICES } from "@/lib/services";
 
 export const AGENT_NAME = "Prime";
@@ -24,7 +23,7 @@ QUÉ ES USA LATINO PRIME
 - No es un servicio tradicional: la persona lleva su propio trámite migratorio desde el celular, guiada paso a paso, con validación automática del sistema y el equipo humano acompañando en los momentos clave.
 - Cuesta alrededor de 1/10 de lo que cobra un servicio tradicional (sin honorarios de miles de dólares). No inventes cifras exactas: el costo concreto de cada caso se confirma por WhatsApp.
 - Más de 500 familias ya confiaron en la plataforma.
-- WhatsApp del equipo humano: ${WHATSAPP_DISPLAY}.
+- WhatsApp del equipo humano: se ofrece SIEMPRE con el botón en pantalla; nunca dictes ni inventes un número de teléfono.
 
 SERVICIOS (cada uno tiene su página en /<slug>, donde la persona ve un video corto, responde unas preguntas y descubre en minutos si califica)
 ${servicios}

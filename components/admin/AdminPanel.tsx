@@ -13,8 +13,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Review, ReviewStatus } from "@/lib/reviews";
 import { getServiceById } from "@/lib/services";
 import { Ico } from "../icons";
+import LeadsPanel from "./LeadsPanel";
 
 type Tab = ReviewStatus;
+type View = "reviews" | "leads";
 
 const TABS: { key: Tab; label: string }[] = [
   { key: "pending", label: "Pendientes" },
@@ -79,6 +81,7 @@ export default function AdminPanel() {
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("pending");
+  const [view, setView] = useState<View>("reviews");
   const [all, setAll] = useState<Review[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -257,24 +260,49 @@ export default function AdminPanel() {
           <span className="admin__brand-dot" aria-hidden="true" />
           <div>
             <span className="admin__kicker">Panel privado</span>
-            <h1 className="admin__title">Reseñas de clientes</h1>
+            <h1 className="admin__title">{view === "reviews" ? "Reseñas de clientes" : "Asesoras y leads"}</h1>
           </div>
         </div>
-        <div className="admin__bar-actions">
+        <div className="admin__views" role="tablist" aria-label="Sección">
           <button
             type="button"
-            className="btn btn--ghost admin__btn-sm"
-            onClick={() => void load()}
-            disabled={loading}
+            role="tab"
+            aria-selected={view === "reviews"}
+            className={"admin__view" + (view === "reviews" ? " admin__view--on" : "")}
+            onClick={() => setView("reviews")}
           >
-            {loading ? "Actualizando…" : "Actualizar"}
+            Reseñas{counts.pending > 0 ? ` · ${counts.pending}` : ""}
           </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={view === "leads"}
+            className={"admin__view" + (view === "leads" ? " admin__view--on" : "")}
+            onClick={() => setView("leads")}
+          >
+            Asesoras y leads
+          </button>
+        </div>
+        <div className="admin__bar-actions">
+          {view === "reviews" && (
+            <button
+              type="button"
+              className="btn btn--ghost admin__btn-sm"
+              onClick={() => void load()}
+              disabled={loading}
+            >
+              {loading ? "Actualizando…" : "Actualizar"}
+            </button>
+          )}
           <button type="button" className="btn btn--ghost admin__btn-sm" onClick={logout}>
             Salir
           </button>
         </div>
       </header>
 
+      {view === "leads" && <LeadsPanel />}
+
+      {view === "reviews" && (
       <section className="admin__stats" aria-label="Resumen">
         <div className={"stat stat--pending" + (counts.pending > 0 ? " stat--alert" : "")}>
           <span className="stat__n">{counts.pending}</span>
@@ -298,7 +326,9 @@ export default function AdminPanel() {
           <span className="stat__l">Recibidas en total</span>
         </div>
       </section>
+      )}
 
+      {view === "reviews" && (
       <div className="admin__toolbar">
         <div className="admin__tabs" role="tablist">
           {TABS.map((t) => (
@@ -325,10 +355,11 @@ export default function AdminPanel() {
           />
         </label>
       </div>
+      )}
 
-      {error && <p className="admin__error">{error}</p>}
+      {view === "reviews" && error && <p className="admin__error">{error}</p>}
 
-      {loading && all.length === 0 ? (
+      {view !== "reviews" ? null : loading && all.length === 0 ? (
         <div className="admin__loading">Cargando…</div>
       ) : items.length === 0 ? (
         <div className="admin__empty">
@@ -410,10 +441,12 @@ export default function AdminPanel() {
         </div>
       )}
 
-      <p className="admin__hint">
-        Las horas se muestran en la zona horaria de tu dispositivo. Al publicar, la reseña aparece en
-        la home al instante; se muestran las 12 más recientes.
-      </p>
+      {view === "reviews" && (
+        <p className="admin__hint">
+          Las horas se muestran en la zona horaria de tu dispositivo. Al publicar, la reseña aparece en
+          la home al instante; se muestran las 12 más recientes.
+        </p>
+      )}
     </div>
   );
 }

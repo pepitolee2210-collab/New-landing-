@@ -11,7 +11,7 @@
    (pasar_a_humano), aparecen los botones en pantalla.
    ============================================================ */
 import { useCallback, useEffect, useRef, useState } from "react";
-import { waLink } from "@/lib/config";
+import { waRoute } from "@/lib/wa-route";
 import { trackBrowser } from "@/lib/meta/pixel-client";
 import { getServiceBySlug } from "@/lib/services";
 import { TOOL_HUMAN, TOOL_RECOMMEND, VOICE_TOOLS, detectServiceSlug } from "@/lib/agent/voice-tools";
@@ -374,7 +374,7 @@ export default function CallView({ onExit }: CallViewProps) {
             {human && (
               <a
                 className="pa-btn pa-btn--wa pa-pop"
-                href={waLink("Hola, vengo de la llamada con Prime y quiero hablar con una persona sobre mi trámite.")}
+                href={waRoute({ kind: "prime_call", message: "Hola, vengo de la llamada con Prime y quiero hablar con una persona sobre mi trámite." })}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => trackBrowser("Contact")}
@@ -388,7 +388,7 @@ export default function CallView({ onExit }: CallViewProps) {
         {(status === "unavailable" || status === "error") && (
           <a
             className="pa-btn pa-btn--wa"
-            href={waLink("Hola, quiero hablar con una persona sobre mi trámite.")}
+            href={waRoute({ kind: "prime_call", message: "Hola, quiero hablar con una persona sobre mi trámite." })}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => trackBrowser("Contact")}

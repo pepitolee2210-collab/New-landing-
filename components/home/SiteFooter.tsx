@@ -3,7 +3,6 @@
    ============================================================ */
 import Image from "next/image";
 import Link from "next/link";
-import { WHATSAPP_DISPLAY } from "@/lib/config";
 import { SERVICES } from "@/lib/services";
 import { Ico } from "../icons";
 import WhatsAppLink from "../WhatsAppLink";
@@ -37,7 +36,7 @@ export default function SiteFooter() {
             className="lp-footer__wa"
             message="Hola, quiero información sobre sus servicios migratorios."
           >
-            {Ico.whatsapp} {WHATSAPP_DISPLAY}
+            {Ico.whatsapp} Escríbenos por WhatsApp
           </WhatsAppLink>
           <Link href="/califica">Califica nuestro servicio</Link>
         </div>

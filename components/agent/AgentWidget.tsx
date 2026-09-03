@@ -10,7 +10,7 @@
    ============================================================ */
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import { waLink } from "@/lib/config";
+import { waRoute } from "@/lib/wa-route";
 import { getServiceBySlug } from "@/lib/services";
 import { trackBrowser } from "@/lib/meta/pixel-client";
 import { Ico } from "../icons";
@@ -117,7 +117,7 @@ function renderRich(text: string, onWa: () => void): ReactNode[] {
         <a
           key={`w${k++}`}
           className="pa-btn pa-btn--wa pa-btn--inline pa-pop"
-          href={waLink("Hola, vengo del chat de Prime y quiero hablar con una persona sobre mi trámite.")}
+          href={waRoute({ kind: "prime_chat", message: "Hola, vengo del chat de Prime y quiero hablar con una persona sobre mi trámite." })}
           target="_blank"
           rel="noopener noreferrer"
           onClick={onWa}
@@ -395,7 +395,7 @@ export default function AgentWidget({ enabled }: { enabled: boolean }) {
   function quick(q: string) {
     if (q === "Hablar con una persona") {
       onWa();
-      window.open(waLink("Hola, quiero hablar con una persona sobre mi trámite."), "_blank", "noopener");
+      window.open(waRoute({ kind: "prime_chat", message: "Hola, quiero hablar con una persona sobre mi trámite." }), "_blank", "noopener");
       return;
     }
     void send(q);
@@ -591,7 +591,7 @@ export default function AgentWidget({ enabled }: { enabled: boolean }) {
                 <span className="pa-composer__note">
                   Prime es un asistente automatizado; no brinda asesoría legal ·{" "}
                   <a
-                    href={waLink("Hola, quiero hablar con una persona sobre mi trámite.")}
+                    href={waRoute({ kind: "prime_chat", message: "Hola, quiero hablar con una persona sobre mi trámite." })}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={onWa}

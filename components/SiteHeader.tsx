@@ -5,7 +5,7 @@
    ============================================================ */
 import Image from "next/image";
 import Link from "next/link";
-import { WHATSAPP_DIGITS, WHATSAPP_DISPLAY } from "@/lib/config";
+import { waRoute } from "@/lib/wa-route";
 import { trackBrowser } from "@/lib/meta/pixel-client";
 import { Ico } from "./icons";
 
@@ -26,13 +26,13 @@ export default function SiteHeader() {
       <div className="topbar__right">
         <a
           className="topbar__phone"
-          href={`https://wa.me/${WHATSAPP_DIGITS}`}
+          href={waRoute()}
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => trackBrowser("Contact")}
         >
           {Ico.whatsapp}
-          <span>{WHATSAPP_DISPLAY}</span>
+          <span>WhatsApp</span>
         </a>
       </div>
     </header>

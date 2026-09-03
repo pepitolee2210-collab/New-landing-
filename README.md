@@ -211,3 +211,19 @@ escritorio: tarjeta flotante.
   previa (responde invitando a WhatsApp) pon `AGENT_PREVIEW="1"`.
 - Eventos del Pixel: `AgentChat`, `AgentCall` (custom) y `Contact` al pasar a WhatsApp.
 - Decisiones y fuentes: `docs/evidencia-agente-gemini.md`.
+
+## Reparto de leads entre asesoras (WhatsApp)
+
+Todos los botones de WhatsApp apuntan a `/ir/whatsapp` (ver `lib/wa-route.ts`). Ahí el
+servidor decide a qué asesora va la persona y redirige a `wa.me`:
+
+1. Si ya tiene asesora asignada (cookie `ulp_adv`, 30 días) y sigue activa → la misma.
+2. Si no → la siguiente por **turno estricto** (RPC `ulp_assign_advisor`, bloqueo de fila).
+   La asignación ocurre en el **primer clic real**, no en la visita: ambas reciben la misma
+   cantidad de personas que de verdad escriben.
+3. Sin Supabase o sin asesoras activas → el número general de `lib/config.ts`.
+
+Cada clic se registra en `ulp_leads` (`source=auto` = lead nuevo, `sticky` = la misma
+persona volviendo a tocar). Panel en `/admin` → "Asesoras y leads": añadir/editar/pausar
+asesoras, reparto de 30 días, leads con fecha y hora. Esquema: `supabase/advisors.sql`.
+Prime nunca dicta un número: ofrece el botón, que pasa por el mismo reparto.

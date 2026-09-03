@@ -145,8 +145,13 @@ export default function PrivacidadPage() {
           navegador, solo en tu dispositivo, y se borra al cerrar la pestaña.
         </li>
         <li>
+          <strong>Asesora asignada:</strong> cuando tocas un botón de WhatsApp, te asignamos una persona de nuestro
+          equipo por turno y guardamos esa asignación en la cookie <code>ulp_adv</code> durante 30 días, para que
+          siempre te atienda la misma asesora. No contiene datos personales tuyos.
+        </li>
+        <li>
           <strong>Panel interno:</strong> una cookie de sesión (<code>ulp_admin</code>) que solo usa nuestro equipo para
-          moderar reseñas; no afecta a los visitantes.
+          moderar reseñas y ver el reparto de contactos; no afecta a los visitantes.
         </li>
       </ul>
       <p>
