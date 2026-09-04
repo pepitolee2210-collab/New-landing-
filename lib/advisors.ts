@@ -15,6 +15,8 @@ export interface Advisor {
   id: string;
   name: string;
   whatsapp: string; // solo dígitos
+  /** Turnos en el reparto (1..10): con 4/4/2 salen 4, 4 y 2 de cada 10 leads. */
+  weight: number;
   active: boolean;
   assigned_count: number;
   last_assigned_at: string | null;
@@ -180,13 +182,14 @@ export async function adminUpsertAdvisor(a: {
   id: string;
   name: string;
   whatsapp: string;
+  weight: number;
   active: boolean;
 }): Promise<boolean> {
   const r = await rpc<unknown>("ulp_admin_advisor_upsert", {
     p_id: a.id,
     p_name: a.name,
     p_whatsapp: a.whatsapp,
-    p_weight: 1,
+    p_weight: a.weight,
     p_active: a.active,
   });
   activeMemo.delete(a.id); // que /ir/whatsapp vea el cambio (pausa/número) al instante

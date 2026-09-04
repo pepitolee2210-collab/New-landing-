@@ -47,12 +47,14 @@ export async function PUT(req: NextRequest) {
   const name = typeof body.name === "string" ? body.name.trim() : "";
   const whatsapp = typeof body.whatsapp === "string" ? body.whatsapp.replace(/\D/g, "") : "";
   const active = body.active !== false;
+  const rawWeight = typeof body.weight === "number" ? Math.round(body.weight) : 1;
+  const weight = Math.min(10, Math.max(1, rawWeight)); // turnos: 1..10
 
   if (!isAdvisorId(id)) return NextResponse.json({ ok: false, error: "id" }, { status: 400 });
   if (name.length < 2 || name.length > 60) return NextResponse.json({ ok: false, error: "name" }, { status: 400 });
   if (!/^[0-9]{8,15}$/.test(whatsapp)) return NextResponse.json({ ok: false, error: "whatsapp" }, { status: 400 });
 
-  const ok = await adminUpsertAdvisor({ id, name, whatsapp, active });
+  const ok = await adminUpsertAdvisor({ id, name, whatsapp, weight, active });
   if (!ok) return NextResponse.json({ ok: false, error: "upstream" }, { status: 502 });
   return NextResponse.json({ ok: true });
 }

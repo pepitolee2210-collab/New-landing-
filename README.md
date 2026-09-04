@@ -218,7 +218,7 @@ Todos los botones de WhatsApp apuntan a `/ir/whatsapp` (ver `lib/wa-route.ts`). 
 servidor decide a qué asesora va la persona y redirige a `wa.me`:
 
 1. Si ya tiene asesora asignada (cookie `ulp_adv`, 30 días) y sigue activa → la misma.
-2. Si no → la siguiente por **turno estricto** (RPC `ulp_assign_advisor`, bloqueo de fila).
+2. Si no → la siguiente por **turno ponderado** según los "turnos" de cada asesora (RPC `ulp_assign_advisor`, bloqueo de fila): con 4/4/2 salen 4, 4 y 2 de cada 10 leads.
    La asignación ocurre en el **primer clic real**, no en la visita: ambas reciben la misma
    cantidad de personas que de verdad escriben.
 3. Sin Supabase o sin asesoras activas → el número general de `lib/config.ts`.

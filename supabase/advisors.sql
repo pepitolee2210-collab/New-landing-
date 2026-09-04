@@ -11,8 +11,8 @@
 --  · ulp_leads: cada clic a WhatsApp con asesora asignada. source='auto'
 --    es la primera vez que la persona escribe (cuenta como lead);
 --    'sticky' es la misma persona volviendo a tocar (no cuenta).
---  · ulp_assign_advisor(): asigna por TURNO ESTRICTO (menos leads primero,
---    en empate la que lleva más tiempo sin recibir) con bloqueo de fila.
+--  · ulp_assign_advisor(): asigna por TURNO PONDERADO exacto según weight
+--    (turnos 1..10); en empate, la que lleva más tiempo sin recibir. Bloqueo de fila.
 --  · Moderación con el secreto de admin, como las reseñas.
 -- ============================================================
 
@@ -62,8 +62,11 @@ declare v_id text;
 begin
   select a.id into v_id
     from public.ulp_advisors a
-    where a.active
-    order by a.assigned_count asc, a.last_assigned_at asc nulls first, a.created_at asc
+    where a.active and a.weight > 0
+    -- turno PONDERADO exacto: menor (asignados+1)/turnos; con 4/4/2 salen 4, 4 y 2 de cada 10
+    order by (a.assigned_count + 1)::numeric / a.weight asc,
+             a.last_assigned_at asc nulls first,
+             a.created_at asc
     limit 1
     for update;
   if v_id is null then return; end if;
@@ -88,15 +91,31 @@ create or replace function public.ulp_admin_advisor_upsert(
   p_secret text, p_id text, p_name text, p_whatsapp text, p_weight int, p_active boolean
 ) returns void
 language plpgsql security definer set search_path = public as $$
+declare
+  v_old  public.ulp_advisors%rowtype;
+  v_par  numeric;
+  v_w    int := greatest(1, least(coalesce(p_weight, 1), 10));
 begin
   if not exists (select 1 from public.ulp_admin_config where admin_secret = p_secret) then
     raise exception 'unauthorized';
   end if;
-  insert into public.ulp_advisors (id, name, whatsapp, weight, active)
-  values (p_id, p_name, p_whatsapp, p_weight, p_active)
-  on conflict (id) do update
-    set name = excluded.name, whatsapp = excluded.whatsapp,
-        weight = excluded.weight, active = excluded.active, updated_at = now();
+  select * into v_old from public.ulp_advisors where id = p_id;
+  if not found then
+    -- alta justa: entra al nivel de la asesora activa más servida (no acapara para ponerse al día)
+    select coalesce(max(assigned_count::numeric / greatest(weight, 1)), 0) into v_par
+      from public.ulp_advisors where active;
+    insert into public.ulp_advisors (id, name, whatsapp, weight, active, assigned_count, last_assigned_at)
+    values (p_id, p_name, p_whatsapp, v_w, p_active, floor(v_par * v_w)::int, now());
+  else
+    -- cambiar los turnos conserva la proporción ya recibida
+    update public.ulp_advisors
+       set name = p_name, whatsapp = p_whatsapp, active = p_active, weight = v_w,
+           assigned_count = case when v_w <> v_old.weight
+                                 then round(v_old.assigned_count::numeric * v_w / greatest(v_old.weight, 1))::int
+                                 else v_old.assigned_count end,
+           updated_at = now()
+     where id = p_id;
+  end if;
 end; $$;
 
 create or replace function public.ulp_admin_advisors_reset(p_secret text)

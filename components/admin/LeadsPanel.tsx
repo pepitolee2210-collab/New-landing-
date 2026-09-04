@@ -78,12 +78,14 @@ function serviceName(l: Lead): string | null {
   return svc?.name ?? null;
 }
 
-/** Siguiente asesora por turno: mismo criterio que la RPC. */
+/** Siguiente asesora por turno ponderado: mismo criterio que la RPC. */
 function nextInTurn(advisors: Advisor[]): Advisor | null {
-  const act = advisors.filter((a) => a.active);
+  const act = advisors.filter((a) => a.active && a.weight > 0);
   if (act.length === 0) return null;
   return [...act].sort((a, b) => {
-    if (a.assigned_count !== b.assigned_count) return a.assigned_count - b.assigned_count;
+    const ra = (a.assigned_count + 1) / a.weight;
+    const rb = (b.assigned_count + 1) / b.weight;
+    if (ra !== rb) return ra - rb;
     const la = a.last_assigned_at ?? "";
     const lb = b.last_assigned_at ?? "";
     if (la !== lb) return la < lb ? -1 : 1;
@@ -218,6 +220,18 @@ export default function LeadsPanel() {
   const total = newLeads.length;
   const next = useMemo(() => nextInTurn(advisors), [advisors]);
   const activeIds = useMemo(() => advisors.filter((a) => a.active).map((a) => a.id), [advisors]);
+  const actives = useMemo(() => advisors.filter((a) => a.active), [advisors]);
+  const weightSum = actives.reduce((s, a) => s + a.weight, 0);
+  /** Posiciones (0..1) de las marcas del reparto justo según los turnos. */
+  const fairMarks = useMemo(() => {
+    const out: number[] = [];
+    let acc = 0;
+    for (const a of actives.slice(0, -1)) {
+      acc += a.weight;
+      out.push(weightSum ? acc / weightSum : 0);
+    }
+    return out;
+  }, [actives, weightSum]);
 
   const bins = useMemo(
     () => buildBins(period, now, newLeads, advisors.map((a) => a.id)),
@@ -265,6 +279,7 @@ export default function LeadsPanel() {
     const name = form.name.trim();
     const whatsapp = form.whatsapp.replace(/\D/g, "");
     const realId = id === "new" ? slugify(name) : id;
+    const weight = advisors.find((a) => a.id === id)?.weight ?? 1;
     if (name.length < 2) return setError("Escribe el nombre de la asesora.");
     if (!/^[0-9]{8,15}$/.test(whatsapp)) return setError("Revisa el número: debe tener el formato +1 (xxx) xxx-xxxx.");
     if (!/^[a-z0-9-]{2,30}$/.test(realId)) return setError("Ese nombre no sirve para crear la asesora; usa letras o números.");
@@ -274,7 +289,7 @@ export default function LeadsPanel() {
       const res = await fetch("/api/admin/advisors", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: realId, name, whatsapp, active }),
+        body: JSON.stringify({ id: realId, name, whatsapp, weight, active }),
       });
       if (!res.ok) return setError("No se pudo guardar. Intenta de nuevo.");
       setEditing(null);
@@ -284,24 +299,35 @@ export default function LeadsPanel() {
     }
   }
 
-  async function toggle(a: Advisor) {
-    if (a.active && activeIds.length <= 1) {
-      setError("No puedes pausar a la única asesora activa: los leads dejarían de repartirse.");
-      return;
-    }
+  /** Cambia estado o turnos de una asesora (mismo endpoint). */
+  async function patch(a: Advisor, changes: Partial<Pick<Advisor, "active" | "weight">>, failMsg: string) {
     setSaving(true);
     setError(null);
     try {
       const res = await fetch("/api/admin/advisors", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: a.id, name: a.name, whatsapp: a.whatsapp, active: !a.active }),
+        body: JSON.stringify({ id: a.id, name: a.name, whatsapp: a.whatsapp, weight: a.weight, active: a.active, ...changes }),
       });
-      if (!res.ok) setError("No se pudo cambiar el estado. Intenta de nuevo.");
+      if (!res.ok) setError(failMsg);
       await load();
     } finally {
       setSaving(false);
     }
+  }
+
+  function toggle(a: Advisor) {
+    if (a.active && activeIds.length <= 1) {
+      setError("No puedes pausar a la única asesora activa: los leads dejarían de repartirse.");
+      return;
+    }
+    void patch(a, { active: !a.active }, "No se pudo cambiar el estado. Intenta de nuevo.");
+  }
+
+  function setWeight(a: Advisor, weight: number) {
+    const w = Math.min(10, Math.max(1, weight));
+    if (w === a.weight) return;
+    void patch(a, { weight: w }, "No se pudieron guardar los turnos. Intenta de nuevo.");
   }
 
   async function reset() {
@@ -399,22 +425,22 @@ export default function LeadsPanel() {
                   />
                 ) : null;
               })}
-              {activeIds.length > 1 &&
-                activeIds.slice(0, -1).map((_, i) => (
-                  <span
-                    key={i}
-                    className="ld__beam-fair"
-                    style={{ left: `${((i + 1) / activeIds.length) * 100}%` }}
-                    title="Reparto justo"
-                  />
-                ))}
+              {fairMarks.map((pos, i) => (
+                <span key={i} className="ld__beam-fair" style={{ left: `${pos * 100}%` }} title="Reparto configurado" />
+              ))}
             </>
           )}
         </div>
         <p className="ld__beam-note">
-          {total === 0
-            ? "La marca blanca señala el reparto justo entre las asesoras activas."
-            : `${total} ${total === 1 ? "lead nuevo" : "leads nuevos"} ${periodLabel}. La marca blanca es el reparto justo; por turno, la diferencia máxima es de un lead.`}
+          {total > 0 && `${total} ${total === 1 ? "lead nuevo" : "leads nuevos"} ${periodLabel}. `}
+          Reparto configurado, de cada {weightSum} leads:{" "}
+          {actives.map((a, i) => (
+            <span key={a.id}>
+              {i > 0 && (i === actives.length - 1 ? " y " : ", ")}
+              <strong>{a.name} {a.weight}</strong>
+            </span>
+          ))}
+          . La marca blanca señala ese reparto; se ajusta con los turnos de cada asesora.
         </p>
       </section>
 
@@ -550,6 +576,26 @@ export default function LeadsPanel() {
                   </label>
                 </header>
 
+                <div className="adv__turns">
+                  <span className="adv__turns-label">
+                    Turnos
+                    <em>
+                      {a.active && weightSum
+                        ? `${a.weight} de cada ${weightSum} leads · ${Math.round((a.weight / weightSum) * 100)}%`
+                        : "no reparte mientras esté pausada"}
+                    </em>
+                  </span>
+                  <span className="stepper" role="group" aria-label={`Turnos de ${a.name}`}>
+                    <button type="button" className="stepper__btn" disabled={saving || a.weight <= 1} onClick={() => setWeight(a, a.weight - 1)} aria-label="Menos turnos">
+                      −
+                    </button>
+                    <b className="stepper__n">{a.weight}</b>
+                    <button type="button" className="stepper__btn" disabled={saving || a.weight >= 10} onClick={() => setWeight(a, a.weight + 1)} aria-label="Más turnos">
+                      +
+                    </button>
+                  </span>
+                </div>
+
                 <div className="adv__nums">
                   <div>
                     <b>{s.leads}</b>
@@ -611,7 +657,7 @@ export default function LeadsPanel() {
                   <input className="rate__input adv__input" value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} placeholder="+1 (xxx) xxx-xxxx" inputMode="tel" aria-label="WhatsApp" />
                 </div>
               </header>
-              <p className="ld__muted">Entra al reparto de inmediato, como activa.</p>
+              <p className="ld__muted">Entra al reparto de inmediato, activa y con 1 turno; luego ajustas sus turnos aquí mismo.</p>
               <footer className="adv__actions">
                 <button type="button" className="btn btn--primary admin__btn-sm" disabled={saving} onClick={() => void save("new", true)}>
                   {Ico.check} Crear asesora
