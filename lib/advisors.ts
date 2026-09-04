@@ -8,6 +8,7 @@
    · Sin Supabase todo cae al número general de lib/config.ts.
    Esquema: supabase/advisors.sql
    ============================================================ */
+import { randomUUID } from "crypto";
 import { WHATSAPP_DIGITS } from "@/lib/config";
 import type { LeadKind } from "@/lib/wa-route";
 
@@ -107,15 +108,19 @@ export async function assignAdvisor(): Promise<AdvisorPick | null> {
   }
 }
 
-/** Registra un lead (cualquier clic a WhatsApp con asesora asignada). */
+/** Registra un lead (cualquier clic a WhatsApp con asesora asignada). Devuelve su id. */
 export async function insertLead(input: {
   advisorId: string;
   kind: LeadKind;
   path: string | null;
   serviceId: string | null;
   source: LeadSource;
-}): Promise<boolean> {
-  if (!advisorsEnabled) return false;
+  contactId?: string | null;
+}): Promise<string | null> {
+  if (!advisorsEnabled) return null;
+  // El id se genera aquí: el rol anon solo puede insertar (no leer) en ulp_leads,
+  // así que pedir la fila de vuelta haría fallar el insert entero.
+  const id = randomUUID();
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/ulp_leads`, {
       method: "POST",
@@ -123,16 +128,18 @@ export async function insertLead(input: {
       cache: "no-store",
       signal: AbortSignal.timeout(4000),
       body: JSON.stringify({
+        id,
         advisor_id: input.advisorId,
         kind: input.kind,
         path: input.path,
         service_id: input.serviceId,
         source: input.source,
+        contact_id: input.contactId ?? null,
       }),
     });
-    return res.ok;
+    return res.ok ? id : null;
   } catch {
-    return false;
+    return null;
   }
 }
 

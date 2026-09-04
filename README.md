@@ -227,3 +227,19 @@ Cada clic se registra en `ulp_leads` (`source=auto` = lead nuevo, `sticky` = la 
 persona volviendo a tocar). Panel en `/admin` → "Asesoras y leads": añadir/editar/pausar
 asesoras, reparto de 30 días, leads con fecha y hora. Esquema: `supabase/advisors.sql`.
 Prime nunca dicta un número: ofrece el botón, que pasa por el mismo reparto.
+
+## CRM interno (contactos, etapas, equipo)
+
+`/admin` es el panel del equipo. El dueño entra con `ADMIN_PASSWORD`; cada asesora con su
+usuario y contraseña (creados por el dueño en "Equipo"). La asesora ve solo sus contactos.
+
+- **Contactos**: vista *Hoy* (sin contactar ordenados por espera + seguimientos vencidos y
+  de hoy), *Tablero* por etapa (arrastrar para cambiar) y *Lista* con búsqueda.
+- **Ficha**: WhatsApp y llamada con un toque, etapa (Nuevo → Contactado → Calificado →
+  Pagado → En trámite → Cerrado, o Perdido con motivo), próximo paso con fecha, servicio,
+  asesora, monto, notas, respuestas del cuestionario e historial de actividad.
+- **Captura automática**: al final del embudo la persona deja nombre y WhatsApp
+  (`/api/contacts/capture`); el contacto nace con sus respuestas, asignado a la misma
+  asesora que recibirá su WhatsApp, y el clic queda anotado en su historial.
+- Datos en Supabase (`supabase/crm.sql`): `ulp_team_users`, `ulp_contacts`,
+  `ulp_activities`. Sesión firmada en `lib/session.ts`. Evidencia: `docs/evidencia-crm.md`.

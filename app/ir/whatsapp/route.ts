@@ -18,8 +18,9 @@ import {
   type AdvisorPick,
   type LeadSource,
 } from "@/lib/advisors";
+import { activityAdd, isUuid } from "@/lib/crm";
 import { getServiceById } from "@/lib/services";
-import { DEFAULT_WA_MESSAGE, LEAD_KINDS, type LeadKind } from "@/lib/wa-route";
+import { DEFAULT_WA_MESSAGE, LEAD_KINDS, LEAD_KIND_LABEL, type LeadKind } from "@/lib/wa-route";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -77,7 +78,19 @@ export async function GET(req: NextRequest) {
   }
 
   if (advisor.id !== "default" && !isBot && allowed) {
-    await insertLead({ advisorId: advisor.id, kind, path: refererPath(req), serviceId, source });
+    // Si la persona dejó sus datos en el cuestionario, el clic queda en su ficha del CRM.
+    const cidRaw = req.cookies.get("ulp_cid")?.value;
+    const contactId = isUuid(cidRaw) ? cidRaw : null;
+    await insertLead({ advisorId: advisor.id, kind, path: refererPath(req), serviceId, source, contactId });
+    if (contactId) {
+      await activityAdd({
+        contactId,
+        author: "web",
+        kind: "whatsapp",
+        body: `Abrió WhatsApp (${LEAD_KIND_LABEL[kind]})`,
+        meta: { kind, path: refererPath(req), advisor_id: advisor.id },
+      });
+    }
   }
 
   const target = `https://wa.me/${advisor.whatsapp}?text=${encodeURIComponent(msg)}`;

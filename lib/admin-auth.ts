@@ -1,20 +1,12 @@
 /* ============================================================
-   UsaLatinoPrime — Autenticación del panel /admin (SOLO servidor)
-   Un solo admin con contraseña (env ADMIN_PASSWORD). La sesión es una
-   cookie httpOnly cuyo valor es un hash derivado de la contraseña:
-   si cambias la contraseña, todas las sesiones caducan solas.
+   UsaLatinoPrime — Autorización del panel /admin (SOLO servidor)
+   La sesión vive en lib/session.ts. Aquí solo los atajos:
+     · isAdminRequest → ¿es el dueño? (moderar reseñas, asesoras, equipo)
+     · isTeamRequest  → ¿hay alguien del equipo con sesión? (CRM)
    ============================================================ */
-import { createHash, timingSafeEqual } from "crypto";
 import type { NextRequest } from "next/server";
-
-export const ADMIN_COOKIE = "ulp_admin";
-
-/** Token de sesión derivado de ADMIN_PASSWORD (null si no está configurada). */
-export function adminToken(): string | null {
-  const pw = process.env.ADMIN_PASSWORD;
-  if (!pw) return null;
-  return createHash("sha256").update(`ulp-admin:${pw}`).digest("hex");
-}
+import { timingSafeEqual } from "crypto";
+import { getSession } from "./session";
 
 /** Comparación en tiempo constante (evita filtrar longitud/prefijos). */
 export function safeEqual(a: string, b: string): boolean {
@@ -24,11 +16,12 @@ export function safeEqual(a: string, b: string): boolean {
   return timingSafeEqual(ba, bb);
 }
 
-/** ¿La petición trae una sesión de admin válida? */
+/** ¿La petición trae sesión del dueño? */
 export function isAdminRequest(req: NextRequest): boolean {
-  const token = adminToken();
-  if (!token) return false;
-  const cookie = req.cookies.get(ADMIN_COOKIE)?.value;
-  if (!cookie) return false;
-  return safeEqual(cookie, token);
+  return getSession(req)?.role === "owner";
+}
+
+/** ¿La petición trae sesión de alguien del equipo (dueño o asesora)? */
+export function isTeamRequest(req: NextRequest): boolean {
+  return getSession(req) !== null;
 }

@@ -5,7 +5,7 @@
    tones: success | urgent (califican) · contact (revisión) · denied (no califica)
    ============================================================ */
 import { useEffect, useRef, useState } from "react";
-import type { ResultData, Service } from "@/lib/types";
+import type { Answers, ResultData, Service } from "@/lib/types";
 import { newEventId, trackBrowser, trackLeadDeduped } from "@/lib/meta/pixel-client";
 import Confetti from "./Confetti";
 import SocialProof from "./SocialProof";
@@ -20,14 +20,49 @@ interface ResultSlideProps {
   onRestart: () => void;
   /** vuelve a la lista de servicios (usado tras un "no califica"). */
   onTryOthers: () => void;
+  /** Respuestas del cuestionario: viajan a la ficha del CRM si la persona deja sus datos. */
+  answers?: Answers;
 }
 
 /** Tiempo antes de llevar automáticamente al usuario a otros servicios. */
 const DENIED_REDIRECT_MS = 8000;
 
-export default function ResultSlide({ service, result, isActive, onRestart, onTryOthers }: ResultSlideProps) {
+export default function ResultSlide({ service, result, isActive, onRestart, onTryOthers, answers }: ResultSlideProps) {
   const tone = result.tone;
   const [scheduleOpen, setScheduleOpen] = useState(false);
+
+  // Captura de nombre y WhatsApp → ficha en el CRM (opcional para la persona).
+  const [capName, setCapName] = useState("");
+  const [capPhone, setCapPhone] = useState("");
+  const [capBusy, setCapBusy] = useState(false);
+  const [capDone, setCapDone] = useState(false);
+  const [capError, setCapError] = useState<string | null>(null);
+  const hpRef = useRef<HTMLInputElement>(null);
+
+  async function saveAndContinue(e: React.FormEvent) {
+    e.preventDefault();
+    const name = capName.trim();
+    const phone = capPhone.replace(/\D/g, "");
+    if (name.length < 2) return setCapError("Escribe tu nombre.");
+    if (!/^[0-9]{8,15}$/.test(phone)) return setCapError("Escribe tu WhatsApp con código de área, por ejemplo +1 (763) 342-2258.");
+    setCapError(null);
+    setCapBusy(true);
+    try {
+      // Si el guardado falla, la persona sigue a WhatsApp igual: nunca se bloquea la conversión.
+      await fetch("/api/contacts/capture", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, phone, serviceId: service.id, tone, answers: answers ?? null, website: hpRef.current?.value ?? "" }),
+        keepalive: true,
+      });
+    } catch {
+      /* seguimos igual */
+    } finally {
+      setCapBusy(false);
+      setCapDone(true);
+      setScheduleOpen(true);
+    }
+  }
 
   // "No califica": redirección automática a otros servicios (solo cuando es visible).
   useEffect(() => {
@@ -115,9 +150,28 @@ export default function ResultSlide({ service, result, isActive, onRestart, onTr
       </div>
       <p className="result__msg">{result.message}</p>
       {isWin && <SocialProof />}
-      <button type="button" className="btn btn--wa" onClick={() => setScheduleOpen(true)}>
-        {Ico.whatsapp} {isWin ? "Agendar por WhatsApp" : "Escribirnos por WhatsApp"}
-      </button>
+      {capDone ? (
+        <button type="button" className="btn btn--wa" onClick={() => setScheduleOpen(true)}>
+          {Ico.whatsapp} {isWin ? "Agendar por WhatsApp" : "Escribirnos por WhatsApp"}
+        </button>
+      ) : (
+        <form className="capture" onSubmit={saveAndContinue}>
+          <span className="capture__t">¿A quién atendemos?</span>
+          <span className="capture__s">Con tu nombre y WhatsApp, la asesora te reconoce al instante y ya tiene tus respuestas a la mano.</span>
+          <div className="capture__row">
+            <input className="rate__input" placeholder="Tu nombre" value={capName} onChange={(e) => setCapName(e.target.value)} autoComplete="name" aria-label="Nombre" />
+            <input className="rate__input" placeholder="Tu WhatsApp" inputMode="tel" value={capPhone} onChange={(e) => setCapPhone(e.target.value)} autoComplete="tel" aria-label="WhatsApp" />
+          </div>
+          <input ref={hpRef} className="rate__hp" type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" />
+          {capError && <span className="rate__error">{capError}</span>}
+          <button type="submit" className="btn btn--wa" disabled={capBusy}>
+            {Ico.whatsapp} {capBusy ? "Guardando…" : isWin ? "Agendar por WhatsApp" : "Escribirnos por WhatsApp"}
+          </button>
+          <button type="button" className="capture__skip" onClick={() => setScheduleOpen(true)}>
+            Prefiero escribir sin dejar mis datos
+          </button>
+        </form>
+      )}
       <button type="button" className="btn btn--ghost" onClick={onRestart}>
         Empezar de nuevo
       </button>

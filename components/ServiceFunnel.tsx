@@ -162,6 +162,7 @@ export default function ServiceFunnel({ serviceId }: { serviceId: string }) {
                     <ResultSlide
                       service={service}
                       result={result}
+                      answers={answers}
                       isActive={cur?.type === "result"}
                       onRestart={restart}
                       onTryOthers={goToServices}
