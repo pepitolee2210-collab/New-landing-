@@ -230,8 +230,13 @@ Prime nunca dicta un número: ofrece el botón, que pasa por el mismo reparto.
 
 ## CRM interno (contactos, etapas, equipo)
 
-`/admin` es el panel del equipo. El dueño entra con `ADMIN_PASSWORD`; cada asesora con su
-usuario y contraseña (creados por el dueño en "Equipo"). La asesora ve solo sus contactos.
+Dos paneles con la misma sesión (`lib/session.ts`):
+
+- **`/admin` — panel del dueño** (cuentas con rol `owner`, p. ej. usuario `henry`): Resumen
+  del negocio (rendimiento por asesora, por servicio, cobrado), Contactos de todo el equipo,
+  Leads y asesoras, Reseñas, Equipo (crear accesos) y Mi cuenta (cambiar contraseña).
+  Si el campo usuario se deja vacío, `ADMIN_PASSWORD` funciona como clave maestra de emergencia.
+- **`/equipo` — panel de las asesoras** (rol `advisor`): solo sus contactos y su cuenta.
 
 - **Contactos**: vista *Hoy* (sin contactar ordenados por espera + seguimientos vencidos y
   de hoy), *Tablero* por etapa (arrastrar para cambiar) y *Lista* con búsqueda.

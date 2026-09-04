@@ -17,7 +17,7 @@ export default function TeamPanel() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null>(null); // id o "new"
-  const [form, setForm] = useState({ id: "", name: "", advisorId: "", password: "" });
+  const [form, setForm] = useState({ id: "", name: "", advisorId: "", password: "", role: "advisor" as "advisor" | "owner" });
   const [saving, setSaving] = useState(false);
   const [now, setNow] = useState(() => Date.now());
 
@@ -44,14 +44,14 @@ export default function TeamPanel() {
 
   function startNew() {
     setEditing("new");
-    setForm({ id: "", name: "", advisorId: advisors.find((a) => !users.some((u) => u.advisor_id === a.id))?.id ?? "", password: "" });
+    setForm({ id: "", name: "", advisorId: advisors.find((a) => !users.some((u) => u.advisor_id === a.id))?.id ?? "", password: "", role: "advisor" });
     setError(null);
     setNotice(null);
   }
 
   function startEdit(u: TeamUser) {
     setEditing(u.id);
-    setForm({ id: u.id, name: u.name, advisorId: u.advisor_id ?? "", password: "" });
+    setForm({ id: u.id, name: u.name, advisorId: u.advisor_id ?? "", password: "", role: u.role });
     setError(null);
     setNotice(null);
   }
@@ -62,7 +62,7 @@ export default function TeamPanel() {
     const name = form.name.trim();
     if (name.length < 2) return setError("Escribe el nombre.");
     if (!/^[a-z0-9-]{2,30}$/.test(id)) return setError("El usuario solo puede llevar letras, números y guiones.");
-    if (!form.advisorId) return setError("Elige a qué asesora (número de WhatsApp) pertenece este acceso.");
+    if (form.role === "advisor" && !form.advisorId) return setError("Elige a qué asesora (número de WhatsApp) pertenece este acceso.");
     if (isNew && form.password.length < 6) return setError("La contraseña debe tener al menos 6 caracteres.");
     if (!isNew && form.password && form.password.length < 6) return setError("La nueva contraseña debe tener al menos 6 caracteres.");
     setSaving(true);
@@ -70,8 +70,9 @@ export default function TeamPanel() {
       const res = await fetch("/api/crm/team", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, name, advisorId: form.advisorId, password: form.password || null, active }),
+        body: JSON.stringify({ id, name, role: form.role, advisorId: form.role === "advisor" ? form.advisorId : null, password: form.password || null, active }),
       });
+      if (res.status === 400 && ((await res.clone().json()) as { error?: string }).error === "last_owner") return setError("Tiene que quedar al menos un dueño activo.");
       if (!res.ok) return setError("No se pudo guardar. Intenta de nuevo.");
       setNotice(isNew ? `Acceso creado. Usuario: ${id}. Comparte la contraseña con ${name} por un canal seguro.` : "Cambios guardados.");
       setEditing(null);
@@ -87,9 +88,10 @@ export default function TeamPanel() {
       const res = await fetch("/api/crm/team", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: u.id, name: u.name, advisorId: u.advisor_id, password: null, active: !u.active }),
+        body: JSON.stringify({ id: u.id, name: u.name, role: u.role, advisorId: u.advisor_id, password: null, active: !u.active }),
       });
-      if (!res.ok) setError("No se pudo cambiar el estado.");
+      if (res.status === 400) setError("Tiene que quedar al menos un dueño activo.");
+      else if (!res.ok) setError("No se pudo cambiar el estado.");
       await load();
     } finally {
       setSaving(false);
@@ -110,8 +112,8 @@ export default function TeamPanel() {
           <div>
             <h2 className="ld__h">Accesos del equipo</h2>
             <p className="ld__muted">
-              Cada asesora entra en <strong>/admin</strong> con su usuario y contraseña y ve solo sus contactos. Tú entras
-              con la contraseña del dueño y ves todo.
+              Las asesoras entran en <strong>/equipo</strong> con su usuario y contraseña y ven solo sus contactos. Los
+              accesos de dueño entran en <strong>/admin</strong> y ven todo.
             </p>
           </div>
           {editing !== "new" && (
@@ -127,6 +129,13 @@ export default function TeamPanel() {
           <article className="adv adv--new" style={{ "--c": "var(--accent)" } as React.CSSProperties}>
             <h3 className="tm__h">Nuevo acceso</h3>
             <label className="tm__field">
+              <span>Tipo de acceso</span>
+              <select className="rate__input adv__input" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as "advisor" | "owner" })}>
+                <option value="advisor">Asesora: ve solo sus contactos (entra en /equipo)</option>
+                <option value="owner">Dueño: ve y controla todo (entra en /admin)</option>
+              </select>
+            </label>
+            <label className="tm__field">
               <span>Nombre</span>
               <input className="rate__input adv__input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value, id: form.id || "" })} placeholder="Jazmín" autoFocus />
             </label>
@@ -138,17 +147,19 @@ export default function TeamPanel() {
               <span>Contraseña</span>
               <input className="rate__input adv__input" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="mínimo 6 caracteres" autoComplete="new-password" />
             </label>
-            <label className="tm__field">
-              <span>Asesora (WhatsApp)</span>
-              <select className="rate__input adv__input" value={form.advisorId} onChange={(e) => setForm({ ...form, advisorId: e.target.value })}>
-                <option value="">Elegir…</option>
-                {advisors.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+            {form.role === "advisor" && (
+              <label className="tm__field">
+                <span>Asesora (WhatsApp)</span>
+                <select className="rate__input adv__input" value={form.advisorId} onChange={(e) => setForm({ ...form, advisorId: e.target.value })}>
+                  <option value="">Elegir…</option>
+                  {advisors.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
             <footer className="adv__actions">
               <button type="button" className="btn btn--primary admin__btn-sm" disabled={saving} onClick={() => void save(true)}>
                 {Ico.check} Crear acceso
@@ -163,7 +174,7 @@ export default function TeamPanel() {
         {users.map((u) => {
           const isEdit = editing === u.id;
           return (
-            <article key={u.id} className={"adv" + (u.active ? "" : " is-off")} style={{ "--c": u.active ? "var(--primary)" : "var(--ink-faint)" } as React.CSSProperties}>
+            <article key={u.id} className={"adv" + (u.active ? "" : " is-off")} style={{ "--c": !u.active ? "var(--ink-faint)" : u.role === "owner" ? "var(--accent)" : "var(--primary)" } as React.CSSProperties}>
               <header className="adv__head">
                 <span className="adv__avatar" aria-hidden="true">
                   {u.name.slice(0, 1).toUpperCase()}
@@ -187,21 +198,31 @@ export default function TeamPanel() {
                     <span>Nueva contraseña <em>(vacío = no cambia)</em></span>
                     <input className="rate__input adv__input" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} autoComplete="new-password" />
                   </label>
-                  <label className="tm__field">
-                    <span>Asesora (WhatsApp)</span>
-                    <select className="rate__input adv__input" value={form.advisorId} onChange={(e) => setForm({ ...form, advisorId: e.target.value })}>
-                      {advisors.map((a) => (
-                        <option key={a.id} value={a.id}>
-                          {a.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                  {u.role === "advisor" && (
+                    <label className="tm__field">
+                      <span>Asesora (WhatsApp)</span>
+                      <select className="rate__input adv__input" value={form.advisorId} onChange={(e) => setForm({ ...form, advisorId: e.target.value })}>
+                        {advisors.map((a) => (
+                          <option key={a.id} value={a.id}>
+                            {a.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
                 </>
               ) : (
                 <div className="adv__foot">
                   <span>
-                    Ve los contactos de <strong>{advisorName(u.advisor_id)}</strong>
+                    {u.role === "owner" ? (
+                      <>
+                        <strong>Dueño</strong> · ve y controla todo (entra en /admin)
+                      </>
+                    ) : (
+                      <>
+                        Ve los contactos de <strong>{advisorName(u.advisor_id)}</strong> (entra en /equipo)
+                      </>
+                    )}
                   </span>
                   <span className="adv__last">{u.last_login_at ? `Última entrada: ${timeAgo(u.last_login_at, now)}` : "Todavía no ha entrado"}</span>
                 </div>

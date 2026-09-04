@@ -55,14 +55,14 @@ export async function POST(req: NextRequest) {
   let who: { name: string; role: "owner" | "advisor" } | null = null;
 
   if (!user) {
-    // Dueño
+    // Clave maestra de emergencia (variable ADMIN_PASSWORD en Vercel): entra como dueño.
     if (!safeEqual(password, expected)) {
       return NextResponse.json({ ok: false, error: "bad_password" }, { status: 401 });
     }
     token = encodeSession({ uid: "owner", name: "Henry", role: "owner", advisorId: null });
     who = { name: "Henry", role: "owner" };
   } else {
-    // Asesora (cuenta del equipo)
+    // Cuenta del equipo (dueño o asesora), verificada en la BD.
     if (!crmEnabled) return NextResponse.json({ ok: false, error: "not_configured" }, { status: 503 });
     const u = await teamLogin(user, password);
     if (!u) return NextResponse.json({ ok: false, error: "bad_password" }, { status: 401 });
