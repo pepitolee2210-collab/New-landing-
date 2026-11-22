@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Reserva tu horario</title>
+<meta name="description" content="Acompañando a los misioneros. Escoge un día y una hora (lunes a viernes, 5 a 9 p. m.) e inscribe a tu familia.">
+<meta property="og:title" content="Reserva tu horario">
+<meta property="og:description" content="Acompañando a los misioneros · Lunes a viernes de 5 a 9 p. m., hasta el 31 de diciembre. Escoge tu horario e inscribe a tu familia.">
+<meta name="theme-color" content="#1d2a4a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: una columna de semanas; cada día es una fila con 4 franjas de 1 hora (tarde-noche). */
+:root{
+  --bg:#f3f4f8; --surface:#ffffff; --ink:#18203a; --muted:#5d6580; --line:#dde1ec;
+  --night:#1d2a4a; --dusk:#e8834a; --dusk-ink:#ffffff; --free:#edf0fb; --free-ink:#22305a;
+  --taken:#eceef3; --taken-ink:#9aa0b2; --ok:#1f8a5b; --err:#c0392b;
+  --display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --body:"Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{ --bg:#0f1424; --surface:#171e33; --ink:#e9ecf6; --muted:#9aa3c0; --line:#273150;
+    --night:#0a0f1d; --dusk:#f09a62; --dusk-ink:#1a1206; --free:#212b49; --free-ink:#dfe5fb;
+    --taken:#1a2036; --taken-ink:#5f6886; --ok:#4cc38f; --err:#ff7b6b; color-scheme:dark; }
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--body);
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--dusk);outline-offset:2px}
+
+/* Cabecera: franja nocturna con el horario como dato principal */
+.hero{background:var(--night);color:#fff;
+  background-image:linear-gradient(180deg,rgba(232,131,74,0) 55%,rgba(232,131,74,.28) 100%)}
+.hero .wrap{padding-block:28px 22px;display:grid;gap:14px}
+.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#c9d0ea}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(30px,7vw,44px);line-height:1.05;margin:0;text-wrap:balance}
+.facts{display:flex;flex-wrap:wrap;gap:8px}
+.fact{border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:5px 12px;font-size:13.5px;color:#eef1fb}
+.fact b{font-weight:600;color:#fff}
+.how{color:#cfd5ec;margin:0;max-width:60ch}
+.dedic{margin:0;font-family:var(--display);font-weight:600;font-size:17px;color:#f6c9a8;max-width:40ch}
+
+/* Barra de estado */
+.status{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding-block:16px 4px}
+.count{font-family:var(--display);font-weight:600;font-size:17px}
+.count span{font-variant-numeric:tabular-nums}
+.legend{display:flex;gap:12px;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+
+/* Mis reservas */
+.mine{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:grid;gap:10px}
+.mine h2{font:600 14px var(--body);margin:0;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.mine-row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.mine-row strong{font-weight:600}
+.linkbtn{background:none;border:0;padding:6px 0;color:var(--err);font-weight:500;text-decoration:underline;text-underline-offset:3px}
+
+/* Semanas y días */
+.week{margin-top:22px}
+.week h3{font:600 12.5px var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.days{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.day{display:grid;grid-template-columns:92px 1fr;gap:12px;align-items:center;padding:12px 14px;border-top:1px solid var(--line)}
+.day:first-child{border-top:0}
+.dlabel{display:grid;line-height:1.15}
+.dlabel .dw{font-size:12.5px;color:var(--muted);text-transform:capitalize}
+.dlabel .dn{font-family:var(--display);font-weight:800;font-size:22px}
+.dlabel .dm{font-size:12.5px;color:var(--muted)}
+.slots{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.slot{min-height:48px;border-radius:11px;border:1px solid transparent;background:var(--free);color:var(--free-ink);
+  display:grid;grid-template-columns:minmax(0,1fr);align-content:center;min-width:0;text-align:center;padding:4px 6px;line-height:1.15;transition:background .15s,transform .15s}
+.slot .t{font-weight:600;font-variant-numeric:tabular-nums}
+.slot .s{font-size:11.5px;opacity:.85;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.slot.is-taken{color:var(--muted)}
+.slot.is-taken .t{opacity:.7}
+.slot.is-taken .s{font-weight:600;opacity:1;color:var(--ink)}
+.slot:hover:not([disabled]){background:var(--dusk);color:var(--dusk-ink)}
+.slot:active:not([disabled]){transform:scale(.97)}
+.slot[disabled]{background:var(--taken);color:var(--taken-ink);cursor:not-allowed}
+.slot.is-mine{background:var(--ok);color:#fff}
+.slot.is-mine[disabled]{background:var(--ok);color:#fff;cursor:default}
+@media (max-width:520px){
+  .day{grid-template-columns:1fr;gap:8px}
+  .dlabel{display:flex;gap:6px;align-items:baseline}
+  .dlabel .dn{font-size:19px}
+  .slots{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+.empty,.notice{color:var(--muted);padding:24px 0;text-align:center}
+.notice.err{color:var(--err)}
+footer{color:var(--muted);font-size:12.5px;padding-block:28px 36px;text-align:center}
+
+/* Hoja de inscripción */
+dialog{border:0;padding:0;border-radius:20px;background:var(--surface);color:var(--ink);width:min(440px,calc(100vw - 24px));
+  box-shadow:0 24px 60px rgba(10,15,30,.35)}
+dialog::backdrop{background:rgba(10,15,30,.55)}
+.sheet{padding:22px 20px 20px;display:grid;gap:14px}
+.sheet h2{font-family:var(--display);font-weight:800;font-size:24px;margin:0;line-height:1.1}
+.when{background:var(--free);color:var(--free-ink);border-radius:12px;padding:10px 12px;font-weight:600}
+label{display:grid;gap:6px;font-weight:500;font-size:14px}
+input{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:11px;padding:12px;width:100%}
+input:focus{border-color:var(--dusk);outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--dusk) 30%,transparent)}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.btn{border:0;border-radius:12px;padding:13px 18px;font-weight:600;flex:1 1 140px}
+.btn.primary{background:var(--dusk);color:var(--dusk-ink)}
+.btn.ghost{background:transparent;border:1px solid var(--line)}
+.btn[disabled]{opacity:.6;cursor:wait}
+.msg{font-size:14px;min-height:1em}
+.msg.err{color:var(--err)}
+.done{text-align:center;display:grid;gap:10px;justify-items:center}
+.check{width:56px;height:56px;border-radius:50%;background:var(--ok);display:grid;place-items:center}
+.small{font-size:13px;color:var(--muted)}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+
+/* Vista del organizador */
+.admin-tools{display:flex;gap:10px;flex-wrap:wrap;padding-block:16px 0}
+.admin-tools .btn{flex:0 0 auto;padding:10px 14px}
+.tablewrap{overflow-x:auto;margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+table{border-collapse:collapse;width:100%;min-width:460px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:10px 12px;border-top:1px solid var(--line);vertical-align:middle}
+th{border-top:0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+td.del{text-align:right;white-space:nowrap}
+.mini{border:1px solid var(--line);background:transparent;border-radius:9px;padding:6px 10px;font-size:13px}
+.mini.danger{border-color:var(--err);color:var(--err)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Acompañando a los misioneros</div>
+    <h1 id="title">Reserva tu horario</h1>
+    <div class="facts">
+      <span class="fact"><b>Lunes a viernes</b></span>
+      <span class="fact"><b>5:00 a 9:00 p. m.</b> · turnos de 1 hora</span>
+      <span class="fact">Hasta el <b>31 de diciembre</b></span>
+    </div>
+    <p class="dedic" id="dedic">Dedicado al Señor, acompañando a los misioneros en su obra.</p>
+    <p class="how" id="how">Toca un horario libre, escribe el nombre de tu familia y listo. Cada horario es para una sola familia.</p>
+  </div>
+</header>
+
+<main class="wrap" id="app">
+  <div class="status" id="statusbar">
+    <div class="count" id="count">Cargando horarios…</div>
+    <div class="legend" aria-hidden="true">
+      <span><i style="background:var(--free);border:1px solid var(--line)"></i>Libre</span>
+      <span><i style="background:var(--taken);border:1px solid var(--line)"></i>Tomado</span>
+      <span><i style="background:var(--ok)"></i>Tuyo</span>
+    </div>
+  </div>
+  <section class="mine" id="mine" hidden></section>
+  <div id="weeks"></div>
+</main>
+
+<footer class="wrap">Los horarios se actualizan solos. Si otra familia toma un horario al mismo tiempo que tú, te avisaremos para que escojas otro.</footer>
+
+<dialog id="sheet" aria-labelledby="sheet-title">
+  <form class="sheet" id="form" novalidate>
+    <h2 id="sheet-title">Confirma tu inscripción</h2>
+    <div class="when" id="when"></div>
+    <label for="nombre">Nombre de la familia
+      <input id="nombre" name="nombre" autocomplete="family-name" maxlength="80" placeholder="Ej.: Familia Pérez" required>
+    </label>
+    <input class="hp" id="website" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <div class="msg" id="msg" role="status"></div>
+    <div class="row">
+      <button type="button" class="btn ghost" id="cancel">Volver</button>
+      <button type="submit" class="btn primary" id="submit">Inscribir a mi familia</button>
+    </div>
+  </form>
+  <div class="sheet done" id="done" hidden>
+    <div class="check" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+    <h2>¡Su familia quedó inscrita!</h2><div class="when" id="done-fam"></div>
+    <div class="when" id="done-when"></div>
+    <p class="small">Tu horario queda guardado en este teléfono. Si no puedes asistir, entra a este mismo link y toca “Cancelar”.</p>
+    <button type="button" class="btn primary" id="close-done">Listo</button>
+  </div>
+</dialog>
+
+<script>
+const CFG = {
+  url: "https://bypfmhflxtnnocgmgppo.supabase.co",
+  key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ5cGZtaGZseHRubm9jZ21ncHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4NjA3NjUsImV4cCI6MjA5ODQzNjc2NX0.j8I0bNHxOQ14BwrI_i6jTqAdGy5pl75cQ47AluEno_o",
+  desde: "2026-11-22",
+  hasta: "2026-12-31",
+  horas: [17, 18, 19, 20]
+};
+const MINE_KEY = "agenda_mis_reservas_v1";
+const $ = (id) => document.getElementById(id);
+
+/* ---------- utilidades de fecha (siempre en hora local) ---------- */
+const pad = (n) => String(n).padStart(2, "0");
+const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const parse = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+const fmt = (d, o) => new Intl.DateTimeFormat("es", o).format(d);
+const h12 = (h) => `${h > 12 ? h - 12 : h}:00`;
+const rango = (h) => `${h12(h)} – ${h12(h + 1)} p. m.`;
+const largo = (f, h) => {
+  const s = fmt(parse(f), { weekday: "long", day: "numeric", month: "long" });
+  return `${s.charAt(0).toUpperCase() + s.slice(1)}, de ${rango(h)}`;
+};
+function diasHabiles() {
+  const out = [], end = parse(CFG.hasta);
+  for (let d = parse(CFG.desde); d <= end; d.setDate(d.getDate() + 1)) {
+    const w = d.getDay();
+    if (w >= 1 && w <= 5) out.push(ymd(d));
+  }
+  return out;
+}
+const yaPaso = (f, h) => { const d = parse(f); d.setHours(h, 0, 0, 0); return d.getTime() <= Date.now(); };
+
+/* ---------- Supabase (funciones RPC) ---------- */
+async function rpc(name, body) {
+  const res = await fetch(`${CFG.url}/rest/v1/rpc/${name}`, {
+    method: "POST",
+    headers: { apikey: CFG.key, Authorization: `Bearer ${CFG.key}`, "Content-Type": "application/json" },
+    body: JSON.stringify(body || {})
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) { const e = new Error((data && data.message) || "error"); e.code = e.message; throw e; }
+  return data;
+}
+
+/* ---------- mis reservas (guardadas en este teléfono) ---------- */
+function leerMias() { try { return JSON.parse(localStorage.getItem(MINE_KEY)) || []; } catch { return []; } }
+function guardarMias(list) { try { localStorage.setItem(MINE_KEY, JSON.stringify(list)); } catch {} }
+
+const params = new URLSearchParams(location.search);
+const ADMIN = params.get("admin");
+if (ADMIN) iniciarAdmin(ADMIN); else iniciarPublico();
+
+/* ================= Vista pública ================= */
+function iniciarPublico() {
+  let ocupados = new Map();
+  let cargado = false;
+  let elegido = null;
+  const dias = diasHabiles();
+  const sheet = $("sheet");
+
+  async function cargar() {
+    try {
+      const rows = await rpc("agenda_ocupados");
+      ocupados = new Map(rows.map((r) => [`${r.fecha}|${r.hora}`, r.familia]));
+      cargado = true;
+      // Limpia reservas locales que ya no existen (p. ej. borradas por el organizador)
+      const mias = leerMias().filter((m) => ocupados.has(`${m.fecha}|${m.hora}`));
+      guardarMias(mias);
+      render();
+    } catch (e) {
+      if (!cargado) {
+        $("count").textContent = "";
+        $("weeks").innerHTML = '<p class="notice err">No pudimos cargar los horarios. Revisa tu conexión y recarga la página.</p>';
+      }
+    }
+  }
+
+  function render() {
+    const mias = leerMias();
+    const misKeys = new Set(mias.map((m) => `${m.fecha}|${m.hora}`));
+    let libres = 0;
+    const semanas = new Map();
+    for (const f of dias) {
+      const vigentes = CFG.horas.filter((h) => !yaPaso(f, h));
+      if (!vigentes.length) continue;
+      const d = parse(f);
+      const lunes = new Date(d); lunes.setDate(d.getDate() - (d.getDay() - 1));
+      const k = ymd(lunes);
+      if (!semanas.has(k)) semanas.set(k, []);
+      semanas.get(k).push(f);
+    }
+    const cont = $("weeks");
+    cont.textContent = "";
+    for (const [, fechas] of semanas) {
+      const a = parse(fechas[0]), b = parse(fechas[fechas.length - 1]);
+      const sec = document.createElement("section");
+      sec.className = "week";
+      const titulo = a.getMonth() === b.getMonth()
+        ? `Semana del ${a.getDate()} al ${b.getDate()} de ${fmt(b, { month: "long" })}`
+        : `Semana del ${a.getDate()} de ${fmt(a, { month: "long" })} al ${b.getDate()} de ${fmt(b, { month: "long" })}`;
+      sec.innerHTML = `<h3></h3><div class="days"></div>`;
+      sec.querySelector("h3").textContent = titulo;
+      const box = sec.querySelector(".days");
+      for (const f of fechas) {
+        const d = parse(f);
+        const row = document.createElement("div");
+        row.className = "day";
+        row.innerHTML = `<div class="dlabel"><span class="dw">${fmt(d, { weekday: "long" })}</span><span class="dn">${d.getDate()}</span><span class="dm">${fmt(d, { month: "short" }).replace(".", "")}</span></div><div class="slots"></div>`;
+        const slots = row.querySelector(".slots");
+        for (const h of CFG.horas) {
+          const key = `${f}|${h}`;
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "slot";
+          const paso = yaPaso(f, h), mio = misKeys.has(key), ocupado = ocupados.has(key);
+          let sub = "Libre";
+          if (mio) { sub = ocupados.get(key) || "Tu horario"; btn.classList.add("is-mine"); btn.disabled = true; }
+          else if (ocupado) { sub = ocupados.get(key) || "Tomado"; btn.disabled = true; btn.classList.add("is-taken"); }
+          else if (paso) { sub = "Ya pasó"; btn.disabled = true; }
+          else { libres++; btn.addEventListener("click", () => abrir(f, h)); }
+          btn.innerHTML = `<span class="t">${h12(h)} – ${h12(h + 1)}</span><span class="s"></span>`;
+          btn.querySelector(".s").textContent = sub;
+          btn.setAttribute("aria-label", `${largo(f, h)}: ${sub}`);
+          slots.appendChild(btn);
+        }
+        box.appendChild(row);
+      }
+      cont.appendChild(sec);
+    }
+    if (!semanas.size) cont.innerHTML = '<p class="empty">El periodo de inscripción terminó.</p>';
+    $("count").innerHTML = `<span>${libres}</span> ${libres === 1 ? "horario libre" : "horarios libres"}`;
+    renderMias(mias);
+  }
+
+  function renderMias(mias) {
+    const box = $("mine");
+    const vigentes = mias.filter((m) => !yaPaso(m.fecha, m.hora + 1));
+    if (!vigentes.length) { box.hidden = true; return; }
+    box.hidden = false;
+    box.innerHTML = `<h2>${vigentes.length === 1 ? "Tu inscripción" : "Tus inscripciones"}</h2>`;
+    for (const m of vigentes) {
+      const row = document.createElement("div");
+      row.className = "mine-row";
+      const s = document.createElement("strong");
+      s.textContent = largo(m.fecha, m.hora);
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "linkbtn"; b.textContent = "Cancelar";
+      b.addEventListener("click", async () => {
+        if (b.dataset.confirm !== "1") { b.dataset.confirm = "1"; b.textContent = "¿Seguro? Toca otra vez para cancelar"; return; }
+        b.disabled = true; b.textContent = "Cancelando…";
+        try {
+          await rpc("agenda_cancelar", { p_token: m.token });
+          guardarMias(leerMias().filter((x) => x.token !== m.token));
+          ocupados.delete(`${m.fecha}|${m.hora}`);
+          render();
+        } catch { b.disabled = false; b.textContent = "No se pudo cancelar. Intenta de nuevo"; b.dataset.confirm = "1"; }
+      });
+      row.append(s, b);
+      box.appendChild(row);
+    }
+  }
+
+  function abrir(f, h) {
+    elegido = { fecha: f, hora: h };
+    $("when").textContent = largo(f, h);
+    $("form").hidden = false; $("done").hidden = true;
+    $("msg").textContent = ""; $("msg").className = "msg";
+    try { const prev = JSON.parse(localStorage.getItem("agenda_datos_v1") || "{}"); if (prev.nombre && !$("nombre").value) $("nombre").value = prev.nombre; } catch {}
+    sheet.showModal();
+    setTimeout(() => (!$("nombre").value ? $("nombre") : $("submit")).focus(), 50);
+  }
+
+  $("cancel").addEventListener("click", () => sheet.close());
+  $("close-done").addEventListener("click", () => sheet.close());
+  sheet.addEventListener("click", (e) => { if (e.target === sheet) sheet.close(); });
+
+  $("form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if ($("website").value) return;
+    const nombre = $("nombre").value.trim();
+    const msg = $("msg");
+    msg.className = "msg err";
+    if (nombre.length < 2) { msg.textContent = "Escribe el nombre de tu familia."; $("nombre").focus(); return; }
+    const btn = $("submit");
+    btn.disabled = true; btn.textContent = "Guardando…"; msg.textContent = "";
+    try {
+      const token = await rpc("agenda_reservar", { p_fecha: elegido.fecha, p_hora: elegido.hora, p_familia: nombre });
+      guardarMias([...leerMias(), { ...elegido, token }]);
+      try { localStorage.setItem("agenda_datos_v1", JSON.stringify({ nombre })); } catch {}
+      ocupados.set(`${elegido.fecha}|${elegido.hora}`, nombre);
+      $("done-fam").textContent = nombre;
+      $("done-when").textContent = largo(elegido.fecha, elegido.hora);
+      $("form").hidden = true; $("done").hidden = false;
+      render();
+    } catch (err) {
+      if (err.code === "ocupado") {
+        msg.textContent = "Otra familia acaba de tomar este horario. Escoge otro, por favor.";
+        ocupados.set(`${elegido.fecha}|${elegido.hora}`, "Tomado"); render();
+      } else msg.textContent = "No se pudo guardar. Revisa tu conexión e intenta de nuevo.";
+    } finally { btn.disabled = false; btn.textContent = "Inscribir a mi familia"; }
+  });
+
+  render();
+  cargar();
+  setInterval(() => { if (!document.hidden && !sheet.open) cargar(); }, 20000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) cargar(); });
+}
+
+/* ================= Vista del organizador (?admin=CLAVE) ================= */
+function iniciarAdmin(clave) {
+  document.title = "Inscritos · Organizador";
+  $("title").textContent = "Familias inscritas";
+  $("how").textContent = "Solo tú ves esta página. No compartas este link: el link para el grupo es el mismo sin “?admin=…”.";
+  $("dedic").hidden = true;
+  document.querySelector(".legend").hidden = true;
+  document.querySelector("footer").hidden = true;
+  const weeks = $("weeks");
+  let filas = [];
+
+  const tools = document.createElement("div");
+  tools.className = "admin-tools";
+  tools.innerHTML = `<button class="btn ghost" id="reload" type="button">Actualizar</button><button class="btn primary" id="copy" type="button">Copiar lista</button><span class="msg" id="amsg"></span>`;
+  $("statusbar").after(tools);
+
+  async function cargar() {
+    try {
+      filas = await rpc("agenda_admin_lista", { p_clave: clave });
+      render();
+    } catch (e) {
+      $("count").textContent = "";
+      weeks.innerHTML = e.code === "no_autorizado"
+        ? '<p class="notice err">La clave de organizador no es válida.</p>'
+        : '<p class="notice err">No se pudo cargar la lista. Intenta de nuevo.</p>';
+    }
+  }
+
+  function render() {
+    $("count").innerHTML = `<span>${filas.length}</span> ${filas.length === 1 ? "familia inscrita" : "familias inscritas"}`;
+    if (!filas.length) { weeks.innerHTML = '<p class="empty">Todavía no hay familias inscritas. Cuando una familia escoja un horario aparecerá aquí.</p>'; return; }
+    weeks.innerHTML = `<div class="tablewrap"><table><thead><tr><th>Día</th><th>Hora</th><th>Familia</th><th></th></tr></thead><tbody></tbody></table></div>`;
+    const tb = weeks.querySelector("tbody");
+    for (const r of filas) {
+      const tr = document.createElement("tr");
+      const d = parse(r.fecha);
+      const cells = [fmt(d, { weekday: "short", day: "numeric", month: "short" }), rango(r.hora), r.familia];
+      for (const c of cells) { const td = document.createElement("td"); td.textContent = c; tr.appendChild(td); }
+      const td = document.createElement("td"); td.className = "del";
+      const b = document.createElement("button"); b.type = "button"; b.className = "mini"; b.textContent = "Quitar";
+      b.addEventListener("click", async () => {
+        if (b.dataset.confirm !== "1") { b.dataset.confirm = "1"; b.textContent = "¿Quitar?"; b.classList.add("danger"); return; }
+        b.disabled = true;
+        try { await rpc("agenda_admin_borrar", { p_clave: clave, p_id: r.id }); filas = filas.filter((x) => x.id !== r.id); render(); }
+        catch { b.disabled = false; b.textContent = "Error, reintentar"; }
+      });
+      td.appendChild(b); tr.appendChild(td); tb.appendChild(tr);
+    }
+  }
+
+  $("reload").addEventListener("click", cargar);
+  $("copy").addEventListener("click", async () => {
+    const txt = filas.map((r) => `• ${largo(r.fecha, r.hora)} — ${r.familia}`).join("\n") || "Sin inscritos";
+    try { await navigator.clipboard.writeText(txt); $("amsg").textContent = "Lista copiada"; }
+    catch { $("amsg").textContent = "No se pudo copiar"; }
+  });
+  cargar();
+}
+</script>
+</body>
+</html>
