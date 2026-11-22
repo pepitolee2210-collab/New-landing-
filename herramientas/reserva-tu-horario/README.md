@@ -1,8 +1,8 @@
 # Reserva tu horario — calendario de inscripción
 
 Página independiente (no forma parte de la web Next.js) para que las familias
-escojan un horario **lunes a viernes, 5–9 p. m.**, del 23-nov al 31-dic-2026,
-"Acompañando a los misioneros". Cada horario admite una sola familia.
+escojan un día **lunes a viernes, 5:00–9:00 p. m.**, del 23-nov al 31-dic-2026,
+"Acompañando a los misioneros". Cada día admite 4 familias.
 
 - `index.html` — página completa (HTML + CSS + JS, sin build). Lee y escribe en
   Supabase mediante funciones RPC con la anon key (pública por diseño).

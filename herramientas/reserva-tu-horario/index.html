@@ -4,95 +4,97 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Reserva tu horario</title>
-<meta name="description" content="Acompañando a los misioneros. Escoge un día y una hora (lunes a viernes, 5 a 9 p. m.) e inscribe a tu familia.">
+<meta name="description" content="Acompañando a los misioneros. Lunes a viernes de 5:00 a 9:00 p. m., 4 familias por día. Escoge tu día e inscribe a tu familia.">
 <meta property="og:title" content="Reserva tu horario">
-<meta property="og:description" content="Acompañando a los misioneros · Lunes a viernes de 5 a 9 p. m., hasta el 31 de diciembre. Escoge tu horario e inscribe a tu familia.">
+<meta property="og:description" content="Acompañando a los misioneros · Lunes a viernes de 5:00 a 9:00 p. m., hasta el 31 de diciembre. 4 familias por día.">
 <meta name="theme-color" content="#1d2a4a">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;500;600&display=swap">
 <style>
-/* Layout: una columna de semanas; cada día es una fila con 4 franjas de 1 hora (tarde-noche). */
+/* Layout: tarjetas por día (lun-vie), cada una con 4 espacios numerados para familias. */
 :root{
   --bg:#f3f4f8; --surface:#ffffff; --ink:#18203a; --muted:#5d6580; --line:#dde1ec;
-  --night:#1d2a4a; --dusk:#e8834a; --dusk-ink:#ffffff; --free:#edf0fb; --free-ink:#22305a;
-  --taken:#eceef3; --taken-ink:#9aa0b2; --ok:#1f8a5b; --err:#c0392b;
+  --night:#1d2a4a; --dusk:#e8834a; --dusk-ink:#ffffff; --soft:#edf0fb; --soft-ink:#22305a;
+  --ok:#1f8a5b; --ok-soft:#e3f4ec; --err:#c0392b; --full:#8a6d1f; --full-soft:#fbf1d9;
   --display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
   --body:"Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){
   :root{ --bg:#0f1424; --surface:#171e33; --ink:#e9ecf6; --muted:#9aa3c0; --line:#273150;
-    --night:#0a0f1d; --dusk:#f09a62; --dusk-ink:#1a1206; --free:#212b49; --free-ink:#dfe5fb;
-    --taken:#1a2036; --taken-ink:#5f6886; --ok:#4cc38f; --err:#ff7b6b; color-scheme:dark; }
+    --night:#0a0f1d; --dusk:#f09a62; --dusk-ink:#1a1206; --soft:#212b49; --soft-ink:#dfe5fb;
+    --ok:#4cc38f; --ok-soft:#173528; --err:#ff7b6b; --full:#e8c46a; --full-soft:#3a3018; color-scheme:dark; }
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--body);
   padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-.wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:980px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 button{font:inherit;color:inherit;cursor:pointer}
 :focus-visible{outline:3px solid var(--dusk);outline-offset:2px}
 
-/* Cabecera: franja nocturna con el horario como dato principal */
+/* Cabecera */
 .hero{background:var(--night);color:#fff;
-  background-image:linear-gradient(180deg,rgba(232,131,74,0) 55%,rgba(232,131,74,.28) 100%)}
-.hero .wrap{padding-block:28px 22px;display:grid;gap:14px}
-.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#c9d0ea}
-h1{font-family:var(--display);font-weight:800;font-size:clamp(30px,7vw,44px);line-height:1.05;margin:0;text-wrap:balance}
+  background-image:radial-gradient(120% 90% at 100% 100%,rgba(232,131,74,.38),rgba(232,131,74,0) 60%)}
+.hero .wrap{padding-block:30px 26px;display:grid;gap:14px}
+.eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#c9d0ea}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(32px,7.5vw,52px);line-height:1;margin:0;text-wrap:balance}
+.dedic{margin:0;font-family:var(--display);font-weight:600;font-size:clamp(16px,3.6vw,19px);color:#f6c9a8;max-width:42ch}
 .facts{display:flex;flex-wrap:wrap;gap:8px}
-.fact{border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:5px 12px;font-size:13.5px;color:#eef1fb}
+.fact{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:6px 13px;font-size:13.5px;color:#eef1fb}
 .fact b{font-weight:600;color:#fff}
-.how{color:#cfd5ec;margin:0;max-width:60ch}
-.dedic{margin:0;font-family:var(--display);font-weight:600;font-size:17px;color:#f6c9a8;max-width:40ch}
+.how{color:#cfd5ec;margin:0;max-width:62ch}
 
-/* Barra de estado */
-.status{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding-block:16px 4px}
-.count{font-family:var(--display);font-weight:600;font-size:17px}
+/* Resumen */
+.status{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;padding-block:18px 2px}
+.count{font-family:var(--display);font-weight:600;font-size:18px}
 .count span{font-variant-numeric:tabular-nums}
-.legend{display:flex;gap:12px;font-size:12.5px;color:var(--muted)}
-.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.hint{font-size:13px;color:var(--muted)}
 
-/* Mis reservas */
-.mine{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:grid;gap:10px}
-.mine h2{font:600 14px var(--body);margin:0;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
-.mine-row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+/* Mis inscripciones */
+.mine{margin-top:14px;background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 35%,transparent);border-radius:14px;padding:14px 16px;display:grid;gap:8px}
+.mine h2{font:600 12.5px var(--body);margin:0;color:var(--ok);letter-spacing:.08em;text-transform:uppercase}
+.mine-row{display:flex;justify-content:space-between;align-items:center;gap:6px 12px;flex-wrap:wrap}
 .mine-row strong{font-weight:600}
 .linkbtn{background:none;border:0;padding:6px 0;color:var(--err);font-weight:500;text-decoration:underline;text-underline-offset:3px}
 
-/* Semanas y días */
-.week{margin-top:22px}
-.week h3{font:600 12.5px var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
-.days{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
-.day{display:grid;grid-template-columns:92px 1fr;gap:12px;align-items:center;padding:12px 14px;border-top:1px solid var(--line)}
-.day:first-child{border-top:0}
-.dlabel{display:grid;line-height:1.15}
-.dlabel .dw{font-size:12.5px;color:var(--muted);text-transform:capitalize}
-.dlabel .dn{font-family:var(--display);font-weight:800;font-size:22px}
-.dlabel .dm{font-size:12.5px;color:var(--muted)}
-.slots{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
-.slot{min-height:48px;border-radius:11px;border:1px solid transparent;background:var(--free);color:var(--free-ink);
-  display:grid;grid-template-columns:minmax(0,1fr);align-content:center;min-width:0;text-align:center;padding:4px 6px;line-height:1.15;transition:background .15s,transform .15s}
-.slot .t{font-weight:600;font-variant-numeric:tabular-nums}
-.slot .s{font-size:11.5px;opacity:.85;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.slot.is-taken{color:var(--muted)}
-.slot.is-taken .t{opacity:.7}
-.slot.is-taken .s{font-weight:600;opacity:1;color:var(--ink)}
-.slot:hover:not([disabled]){background:var(--dusk);color:var(--dusk-ink)}
-.slot:active:not([disabled]){transform:scale(.97)}
-.slot[disabled]{background:var(--taken);color:var(--taken-ink);cursor:not-allowed}
-.slot.is-mine{background:var(--ok);color:#fff}
-.slot.is-mine[disabled]{background:var(--ok);color:#fff;cursor:default}
-@media (max-width:520px){
-  .day{grid-template-columns:1fr;gap:8px}
-  .dlabel{display:flex;gap:6px;align-items:baseline}
-  .dlabel .dn{font-size:19px}
-  .slots{grid-template-columns:repeat(2,minmax(0,1fr))}
-}
-.empty,.notice{color:var(--muted);padding:24px 0;text-align:center}
+/* Semanas */
+.week{margin-top:26px}
+.week h3{font:600 12.5px var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+.days{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:12px}
+
+/* Tarjeta de día */
+.day{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;gap:12px;min-width:0}
+.day-head{display:flex;align-items:center;gap:12px}
+.date{width:58px;flex:0 0 58px;border-radius:12px;background:var(--night);color:#fff;text-align:center;padding:6px 0 7px;line-height:1.05}
+.date .dw{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#c9d0ea}
+.date .dn{display:block;font-family:var(--display);font-weight:800;font-size:26px}
+.date .dm{display:block;font-size:11.5px;color:#f6c9a8;text-transform:lowercase}
+.day-info{display:grid;gap:4px;min-width:0}
+.day-name{font-weight:600}
+.time{font-size:13.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.pill{justify-self:start;font-size:12px;font-weight:600;border-radius:999px;padding:2px 9px;background:var(--soft);color:var(--soft-ink)}
+.pill.full{background:var(--full-soft);color:var(--full)}
+.pill.closed{background:var(--line);color:var(--muted)}
+.spots{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.spot{display:flex;align-items:center;gap:10px;min-height:40px;padding:6px 10px;border-radius:10px;border:1px dashed var(--line);color:var(--muted);min-width:0}
+.spot .n{flex:0 0 24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:600;background:var(--soft);color:var(--soft-ink);font-variant-numeric:tabular-nums}
+.spot .who{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.spot.taken{border-style:solid;background:var(--bg);color:var(--ink);font-weight:600}
+.spot.taken .n{background:var(--night);color:#fff}
+.spot.mine-spot{border-color:var(--ok);background:var(--ok-soft)}
+.spot.mine-spot .n{background:var(--ok);color:#fff}
+.tag{margin-left:auto;flex:0 0 auto;font-size:11.5px;font-weight:600;color:var(--ok)}
+.join{border:0;border-radius:12px;padding:12px 14px;font-weight:600;background:var(--dusk);color:var(--dusk-ink);transition:filter .15s,transform .15s}
+.join:hover{filter:brightness(1.05)}
+.join:active{transform:scale(.98)}
+.day.is-closed{opacity:.6}
+
+.empty,.notice{color:var(--muted);padding:28px 0;text-align:center}
 .notice.err{color:var(--err)}
-footer{color:var(--muted);font-size:12.5px;padding-block:28px 36px;text-align:center}
+footer{color:var(--muted);font-size:12.5px;padding-block:30px 40px;text-align:center}
 
 /* Hoja de inscripción */
 dialog{border:0;padding:0;border-radius:20px;background:var(--surface);color:var(--ink);width:min(440px,calc(100vw - 24px));
@@ -100,7 +102,7 @@ dialog{border:0;padding:0;border-radius:20px;background:var(--surface);color:var
 dialog::backdrop{background:rgba(10,15,30,.55)}
 .sheet{padding:22px 20px 20px;display:grid;gap:14px}
 .sheet h2{font-family:var(--display);font-weight:800;font-size:24px;margin:0;line-height:1.1}
-.when{background:var(--free);color:var(--free-ink);border-radius:12px;padding:10px 12px;font-weight:600}
+.when{background:var(--soft);color:var(--soft-ink);border-radius:12px;padding:10px 12px;font-weight:600}
 label{display:grid;gap:6px;font-weight:500;font-size:14px}
 input{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:11px;padding:12px;width:100%}
 input:focus{border-color:var(--dusk);outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--dusk) 30%,transparent)}
@@ -117,14 +119,9 @@ input:focus{border-color:var(--dusk);outline:none;box-shadow:0 0 0 3px color-mix
 .hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
 
 /* Vista del organizador */
-.admin-tools{display:flex;gap:10px;flex-wrap:wrap;padding-block:16px 0}
+.admin-tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding-block:16px 0}
 .admin-tools .btn{flex:0 0 auto;padding:10px 14px}
-.tablewrap{overflow-x:auto;margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:14px}
-table{border-collapse:collapse;width:100%;min-width:460px;font-variant-numeric:tabular-nums}
-th,td{text-align:left;padding:10px 12px;border-top:1px solid var(--line);vertical-align:middle}
-th{border-top:0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
-td.del{text-align:right;white-space:nowrap}
-.mini{border:1px solid var(--line);background:transparent;border-radius:9px;padding:6px 10px;font-size:13px}
+.mini{border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:4px 9px;font-size:12.5px;margin-left:auto;flex:0 0 auto}
 .mini.danger{border-color:var(--err);color:var(--err)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -135,34 +132,31 @@ td.del{text-align:right;white-space:nowrap}
   <div class="wrap">
     <div class="eyebrow">Acompañando a los misioneros</div>
     <h1 id="title">Reserva tu horario</h1>
-    <div class="facts">
+    <p class="dedic" id="dedic">Dedicado al Señor, acompañando a los misioneros en su obra.</p>
+    <div class="facts" id="facts">
       <span class="fact"><b>Lunes a viernes</b></span>
-      <span class="fact"><b>5:00 a 9:00 p. m.</b> · turnos de 1 hora</span>
+      <span class="fact"><b>5:00 a 9:00 p. m.</b></span>
+      <span class="fact"><b>4 familias</b> por día</span>
       <span class="fact">Hasta el <b>31 de diciembre</b></span>
     </div>
-    <p class="dedic" id="dedic">Dedicado al Señor, acompañando a los misioneros en su obra.</p>
-    <p class="how" id="how">Toca un horario libre, escribe el nombre de tu familia y listo. Cada horario es para una sola familia.</p>
+    <p class="how" id="how">Escoge un día con espacio libre, toca “Anotar a mi familia” y escribe el nombre de tu familia.</p>
   </div>
 </header>
 
 <main class="wrap" id="app">
   <div class="status" id="statusbar">
-    <div class="count" id="count">Cargando horarios…</div>
-    <div class="legend" aria-hidden="true">
-      <span><i style="background:var(--free);border:1px solid var(--line)"></i>Libre</span>
-      <span><i style="background:var(--taken);border:1px solid var(--line)"></i>Tomado</span>
-      <span><i style="background:var(--ok)"></i>Tuyo</span>
-    </div>
+    <div class="count" id="count">Cargando calendario…</div>
+    <div class="hint" id="hint">Los nombres se actualizan solos.</div>
   </div>
   <section class="mine" id="mine" hidden></section>
   <div id="weeks"></div>
 </main>
 
-<footer class="wrap">Los horarios se actualizan solos. Si otra familia toma un horario al mismo tiempo que tú, te avisaremos para que escojas otro.</footer>
+<footer class="wrap" id="foot">Si te equivocaste de día, cancela tu inscripción desde este mismo teléfono y anótate en otro.</footer>
 
 <dialog id="sheet" aria-labelledby="sheet-title">
   <form class="sheet" id="form" novalidate>
-    <h2 id="sheet-title">Confirma tu inscripción</h2>
+    <h2 id="sheet-title">Anota a tu familia</h2>
     <div class="when" id="when"></div>
     <label for="nombre">Nombre de la familia
       <input id="nombre" name="nombre" autocomplete="family-name" maxlength="80" placeholder="Ej.: Familia Pérez" required>
@@ -171,14 +165,14 @@ td.del{text-align:right;white-space:nowrap}
     <div class="msg" id="msg" role="status"></div>
     <div class="row">
       <button type="button" class="btn ghost" id="cancel">Volver</button>
-      <button type="submit" class="btn primary" id="submit">Inscribir a mi familia</button>
+      <button type="submit" class="btn primary" id="submit">Anotar a mi familia</button>
     </div>
   </form>
   <div class="sheet done" id="done" hidden>
     <div class="check" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
-    <h2>¡Su familia quedó inscrita!</h2><div class="when" id="done-fam"></div>
+    <h2>¡Su familia quedó anotada!</h2>
     <div class="when" id="done-when"></div>
-    <p class="small">Tu horario queda guardado en este teléfono. Si no puedes asistir, entra a este mismo link y toca “Cancelar”.</p>
+    <p class="small">Queda guardado en este teléfono. Si no pueden asistir, entren a este mismo link y toquen “Cancelar”.</p>
     <button type="button" class="btn primary" id="close-done">Listo</button>
   </div>
 </dialog>
@@ -189,22 +183,22 @@ const CFG = {
   key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ5cGZtaGZseHRubm9jZ21ncHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4NjA3NjUsImV4cCI6MjA5ODQzNjc2NX0.j8I0bNHxOQ14BwrI_i6jTqAdGy5pl75cQ47AluEno_o",
   desde: "2026-11-22",
   hasta: "2026-12-31",
-  horas: [17, 18, 19, 20]
+  inicio: 17,   // 5:00 p. m.
+  fin: 21,      // 9:00 p. m.
+  espacios: 4
 };
-const MINE_KEY = "agenda_mis_reservas_v1";
+const HORARIO = "5:00 – 9:00 p. m.";
+const MINE_KEY = "agenda_mis_reservas_v2";
 const $ = (id) => document.getElementById(id);
 
-/* ---------- utilidades de fecha (siempre en hora local) ---------- */
+/* ---------- fechas (hora local) ---------- */
 const pad = (n) => String(n).padStart(2, "0");
 const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const parse = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
 const fmt = (d, o) => new Intl.DateTimeFormat("es", o).format(d);
-const h12 = (h) => `${h > 12 ? h - 12 : h}:00`;
-const rango = (h) => `${h12(h)} – ${h12(h + 1)} p. m.`;
-const largo = (f, h) => {
-  const s = fmt(parse(f), { weekday: "long", day: "numeric", month: "long" });
-  return `${s.charAt(0).toUpperCase() + s.slice(1)}, de ${rango(h)}`;
-};
+const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+const largo = (f) => cap(fmt(parse(f), { weekday: "long", day: "numeric", month: "long" }));
+const antesDe = (f, h) => { const d = parse(f); d.setHours(h, 0, 0, 0); return Date.now() < d.getTime(); };
 function diasHabiles() {
   const out = [], end = parse(CFG.hasta);
   for (let d = parse(CFG.desde); d <= end; d.setDate(d.getDate() + 1)) {
@@ -213,9 +207,8 @@ function diasHabiles() {
   }
   return out;
 }
-const yaPaso = (f, h) => { const d = parse(f); d.setHours(h, 0, 0, 0); return d.getTime() <= Date.now(); };
 
-/* ---------- Supabase (funciones RPC) ---------- */
+/* ---------- Supabase ---------- */
 async function rpc(name, body) {
   const res = await fetch(`${CFG.url}/rest/v1/rpc/${name}`, {
     method: "POST",
@@ -227,9 +220,35 @@ async function rpc(name, body) {
   return data;
 }
 
-/* ---------- mis reservas (guardadas en este teléfono) ---------- */
+/* ---------- mis inscripciones (en este teléfono) ---------- */
 function leerMias() { try { return JSON.parse(localStorage.getItem(MINE_KEY)) || []; } catch { return []; } }
 function guardarMias(list) { try { localStorage.setItem(MINE_KEY, JSON.stringify(list)); } catch {} }
+
+/* Agrupa días por semana (lunes) */
+function porSemana(fechas) {
+  const semanas = new Map();
+  for (const f of fechas) {
+    const d = parse(f), lunes = new Date(d);
+    lunes.setDate(d.getDate() - (d.getDay() - 1));
+    const k = ymd(lunes);
+    if (!semanas.has(k)) semanas.set(k, []);
+    semanas.get(k).push(f);
+  }
+  return semanas;
+}
+function tituloSemana(fechas) {
+  const a = parse(fechas[0]), b = parse(fechas[fechas.length - 1]);
+  return a.getMonth() === b.getMonth()
+    ? `Semana del ${a.getDate()} al ${b.getDate()} de ${fmt(b, { month: "long" })}`
+    : `Semana del ${a.getDate()} de ${fmt(a, { month: "long" })} al ${b.getDate()} de ${fmt(b, { month: "long" })}`;
+}
+function cabeceraDia(f) {
+  const d = parse(f);
+  const head = document.createElement("div");
+  head.className = "day-head";
+  head.innerHTML = `<div class="date" aria-hidden="true"><span class="dw">${fmt(d, { weekday: "short" }).replace(".", "")}</span><span class="dn">${d.getDate()}</span><span class="dm">${fmt(d, { month: "short" }).replace(".", "")}</span></div><div class="day-info"><span class="day-name">${largo(f)}</span><span class="time">${HORARIO}</span><span class="pill"></span></div>`;
+  return head;
+}
 
 const params = new URLSearchParams(location.search);
 const ADMIN = params.get("admin");
@@ -237,7 +256,7 @@ if (ADMIN) iniciarAdmin(ADMIN); else iniciarPublico();
 
 /* ================= Vista pública ================= */
 function iniciarPublico() {
-  let ocupados = new Map();
+  let porDia = new Map();   // fecha -> Map(puesto -> familia)
   let cargado = false;
   let elegido = null;
   const dias = diasHabiles();
@@ -246,80 +265,85 @@ function iniciarPublico() {
   async function cargar() {
     try {
       const rows = await rpc("agenda_ocupados");
-      ocupados = new Map(rows.map((r) => [`${r.fecha}|${r.hora}`, r.familia]));
+      porDia = new Map();
+      for (const r of rows) {
+        if (!porDia.has(r.fecha)) porDia.set(r.fecha, new Map());
+        porDia.get(r.fecha).set(r.puesto, r.familia);
+      }
       cargado = true;
-      // Limpia reservas locales que ya no existen (p. ej. borradas por el organizador)
-      const mias = leerMias().filter((m) => ocupados.has(`${m.fecha}|${m.hora}`));
-      guardarMias(mias);
+      // Olvida inscripciones locales que ya no existen (p. ej. quitadas por el organizador)
+      guardarMias(leerMias().filter((m) => porDia.get(m.fecha)?.get(m.puesto) === m.familia));
       render();
     } catch (e) {
       if (!cargado) {
         $("count").textContent = "";
-        $("weeks").innerHTML = '<p class="notice err">No pudimos cargar los horarios. Revisa tu conexión y recarga la página.</p>';
+        $("weeks").innerHTML = '<p class="notice err">No pudimos cargar el calendario. Revisa tu conexión y recarga la página.</p>';
       }
     }
   }
 
   function render() {
     const mias = leerMias();
-    const misKeys = new Set(mias.map((m) => `${m.fecha}|${m.hora}`));
-    let libres = 0;
-    const semanas = new Map();
-    for (const f of dias) {
-      const vigentes = CFG.horas.filter((h) => !yaPaso(f, h));
-      if (!vigentes.length) continue;
-      const d = parse(f);
-      const lunes = new Date(d); lunes.setDate(d.getDate() - (d.getDay() - 1));
-      const k = ymd(lunes);
-      if (!semanas.has(k)) semanas.set(k, []);
-      semanas.get(k).push(f);
-    }
+    const visibles = dias.filter((f) => antesDe(f, CFG.fin));
     const cont = $("weeks");
     cont.textContent = "";
-    for (const [, fechas] of semanas) {
-      const a = parse(fechas[0]), b = parse(fechas[fechas.length - 1]);
+    let libres = 0, diasConEspacio = 0;
+    for (const [, fechas] of porSemana(visibles)) {
       const sec = document.createElement("section");
       sec.className = "week";
-      const titulo = a.getMonth() === b.getMonth()
-        ? `Semana del ${a.getDate()} al ${b.getDate()} de ${fmt(b, { month: "long" })}`
-        : `Semana del ${a.getDate()} de ${fmt(a, { month: "long" })} al ${b.getDate()} de ${fmt(b, { month: "long" })}`;
-      sec.innerHTML = `<h3></h3><div class="days"></div>`;
-      sec.querySelector("h3").textContent = titulo;
-      const box = sec.querySelector(".days");
+      const h3 = document.createElement("h3");
+      h3.textContent = tituloSemana(fechas);
+      const grid = document.createElement("div");
+      grid.className = "days";
+      sec.append(h3, grid);
       for (const f of fechas) {
-        const d = parse(f);
-        const row = document.createElement("div");
-        row.className = "day";
-        row.innerHTML = `<div class="dlabel"><span class="dw">${fmt(d, { weekday: "long" })}</span><span class="dn">${d.getDate()}</span><span class="dm">${fmt(d, { month: "short" }).replace(".", "")}</span></div><div class="slots"></div>`;
-        const slots = row.querySelector(".slots");
-        for (const h of CFG.horas) {
-          const key = `${f}|${h}`;
-          const btn = document.createElement("button");
-          btn.type = "button";
-          btn.className = "slot";
-          const paso = yaPaso(f, h), mio = misKeys.has(key), ocupado = ocupados.has(key);
-          let sub = "Libre";
-          if (mio) { sub = ocupados.get(key) || "Tu horario"; btn.classList.add("is-mine"); btn.disabled = true; }
-          else if (ocupado) { sub = ocupados.get(key) || "Tomado"; btn.disabled = true; btn.classList.add("is-taken"); }
-          else if (paso) { sub = "Ya pasó"; btn.disabled = true; }
-          else { libres++; btn.addEventListener("click", () => abrir(f, h)); }
-          btn.innerHTML = `<span class="t">${h12(h)} – ${h12(h + 1)}</span><span class="s"></span>`;
-          btn.querySelector(".s").textContent = sub;
-          btn.setAttribute("aria-label", `${largo(f, h)}: ${sub}`);
-          slots.appendChild(btn);
+        const ocup = porDia.get(f) || new Map();
+        const abierto = antesDe(f, CFG.inicio);
+        const n = CFG.espacios - ocup.size;
+        if (abierto && n > 0) { libres += n; diasConEspacio++; }
+        const card = document.createElement("article");
+        card.className = "day" + (abierto ? "" : " is-closed");
+        const head = cabeceraDia(f);
+        const pill = head.querySelector(".pill");
+        if (!abierto) { pill.textContent = "Cerrado"; pill.classList.add("closed"); }
+        else if (n === 0) { pill.textContent = "Completo"; pill.classList.add("full"); }
+        else pill.textContent = n === 1 ? "Queda 1 espacio" : `Quedan ${n} espacios`;
+        const ul = document.createElement("ol");
+        ul.className = "spots";
+        ul.setAttribute("aria-label", `Familias anotadas el ${largo(f)}`);
+        for (let p = 1; p <= CFG.espacios; p++) {
+          const li = document.createElement("li");
+          li.className = "spot";
+          const fam = ocup.get(p);
+          const esMia = mias.some((m) => m.fecha === f && m.puesto === p);
+          li.innerHTML = `<span class="n">${p}</span><span class="who"></span>`;
+          li.querySelector(".who").textContent = fam || "Espacio libre";
+          if (fam) li.classList.add("taken");
+          if (esMia) { li.classList.add("mine-spot"); li.insertAdjacentHTML("beforeend", '<span class="tag">Tu familia</span>'); }
+          ul.appendChild(li);
         }
-        box.appendChild(row);
+        card.append(head, ul);
+        if (abierto && n > 0) {
+          const b = document.createElement("button");
+          b.type = "button"; b.className = "join"; b.textContent = "Anotar a mi familia";
+          b.setAttribute("aria-label", `Anotar a mi familia el ${largo(f)}`);
+          b.addEventListener("click", () => abrir(f));
+          card.appendChild(b);
+        }
+        grid.appendChild(card);
       }
       cont.appendChild(sec);
     }
-    if (!semanas.size) cont.innerHTML = '<p class="empty">El periodo de inscripción terminó.</p>';
-    $("count").innerHTML = `<span>${libres}</span> ${libres === 1 ? "horario libre" : "horarios libres"}`;
+    if (!visibles.length) cont.innerHTML = '<p class="empty">El periodo de inscripción terminó. ¡Gracias a todas las familias!</p>';
+    $("count").innerHTML = visibles.length
+      ? `<span>${libres}</span> ${libres === 1 ? "espacio libre" : "espacios libres"} en <span>${diasConEspacio}</span> ${diasConEspacio === 1 ? "día" : "días"}`
+      : "";
     renderMias(mias);
   }
 
   function renderMias(mias) {
     const box = $("mine");
-    const vigentes = mias.filter((m) => !yaPaso(m.fecha, m.hora + 1));
+    const vigentes = mias.filter((m) => antesDe(m.fecha, CFG.fin));
     if (!vigentes.length) { box.hidden = true; return; }
     box.hidden = false;
     box.innerHTML = `<h2>${vigentes.length === 1 ? "Tu inscripción" : "Tus inscripciones"}</h2>`;
@@ -327,7 +351,7 @@ function iniciarPublico() {
       const row = document.createElement("div");
       row.className = "mine-row";
       const s = document.createElement("strong");
-      s.textContent = largo(m.fecha, m.hora);
+      s.textContent = `${m.familia} · ${largo(m.fecha)}, ${HORARIO}`;
       const b = document.createElement("button");
       b.type = "button"; b.className = "linkbtn"; b.textContent = "Cancelar";
       b.addEventListener("click", async () => {
@@ -336,18 +360,18 @@ function iniciarPublico() {
         try {
           await rpc("agenda_cancelar", { p_token: m.token });
           guardarMias(leerMias().filter((x) => x.token !== m.token));
-          ocupados.delete(`${m.fecha}|${m.hora}`);
+          porDia.get(m.fecha)?.delete(m.puesto);
           render();
-        } catch { b.disabled = false; b.textContent = "No se pudo cancelar. Intenta de nuevo"; b.dataset.confirm = "1"; }
+        } catch { b.disabled = false; b.textContent = "No se pudo cancelar. Intenta de nuevo"; }
       });
       row.append(s, b);
       box.appendChild(row);
     }
   }
 
-  function abrir(f, h) {
-    elegido = { fecha: f, hora: h };
-    $("when").textContent = largo(f, h);
+  function abrir(f) {
+    elegido = f;
+    $("when").textContent = `${largo(f)} · ${HORARIO}`;
     $("form").hidden = false; $("done").hidden = true;
     $("msg").textContent = ""; $("msg").className = "msg";
     try { const prev = JSON.parse(localStorage.getItem("agenda_datos_v1") || "{}"); if (prev.nombre && !$("nombre").value) $("nombre").value = prev.nombre; } catch {}
@@ -362,27 +386,26 @@ function iniciarPublico() {
   $("form").addEventListener("submit", async (e) => {
     e.preventDefault();
     if ($("website").value) return;
-    const nombre = $("nombre").value.trim();
+    const nombre = $("nombre").value.trim().replace(/\s+/g, " ");
     const msg = $("msg");
     msg.className = "msg err";
     if (nombre.length < 2) { msg.textContent = "Escribe el nombre de tu familia."; $("nombre").focus(); return; }
     const btn = $("submit");
     btn.disabled = true; btn.textContent = "Guardando…"; msg.textContent = "";
     try {
-      const token = await rpc("agenda_reservar", { p_fecha: elegido.fecha, p_hora: elegido.hora, p_familia: nombre });
-      guardarMias([...leerMias(), { ...elegido, token }]);
+      const r = await rpc("agenda_reservar", { p_fecha: elegido, p_familia: nombre });
+      guardarMias([...leerMias(), { fecha: elegido, puesto: r.puesto, token: r.token, familia: nombre }]);
       try { localStorage.setItem("agenda_datos_v1", JSON.stringify({ nombre })); } catch {}
-      ocupados.set(`${elegido.fecha}|${elegido.hora}`, nombre);
-      $("done-fam").textContent = nombre;
-      $("done-when").textContent = largo(elegido.fecha, elegido.hora);
+      if (!porDia.has(elegido)) porDia.set(elegido, new Map());
+      porDia.get(elegido).set(r.puesto, nombre);
+      $("done-when").textContent = `${nombre} · ${largo(elegido)}, ${HORARIO}`;
       $("form").hidden = true; $("done").hidden = false;
       render();
     } catch (err) {
-      if (err.code === "ocupado") {
-        msg.textContent = "Otra familia acaba de tomar este horario. Escoge otro, por favor.";
-        ocupados.set(`${elegido.fecha}|${elegido.hora}`, "Tomado"); render();
-      } else msg.textContent = "No se pudo guardar. Revisa tu conexión e intenta de nuevo.";
-    } finally { btn.disabled = false; btn.textContent = "Inscribir a mi familia"; }
+      if (err.code === "lleno") { msg.textContent = "Este día se acaba de llenar. Escoge otro día, por favor."; cargar(); }
+      else if (err.code === "repetida") msg.textContent = "Tu familia ya está anotada en este día.";
+      else msg.textContent = "No se pudo guardar. Revisa tu conexión e intenta de nuevo.";
+    } finally { btn.disabled = false; btn.textContent = "Anotar a mi familia"; }
   });
 
   render();
@@ -393,12 +416,10 @@ function iniciarPublico() {
 
 /* ================= Vista del organizador (?admin=CLAVE) ================= */
 function iniciarAdmin(clave) {
-  document.title = "Inscritos · Organizador";
+  document.title = "Familias inscritas · Organizador";
   $("title").textContent = "Familias inscritas";
   $("how").textContent = "Solo tú ves esta página. No compartas este link: el link para el grupo es el mismo sin “?admin=…”.";
-  $("dedic").hidden = true;
-  document.querySelector(".legend").hidden = true;
-  document.querySelector("footer").hidden = true;
+  $("dedic").hidden = true; $("facts").hidden = true; $("foot").hidden = true; $("hint").hidden = true;
   const weeks = $("weeks");
   let filas = [];
 
@@ -408,10 +429,8 @@ function iniciarAdmin(clave) {
   $("statusbar").after(tools);
 
   async function cargar() {
-    try {
-      filas = await rpc("agenda_admin_lista", { p_clave: clave });
-      render();
-    } catch (e) {
+    try { filas = await rpc("agenda_admin_lista", { p_clave: clave }); render(); }
+    catch (e) {
       $("count").textContent = "";
       weeks.innerHTML = e.code === "no_autorizado"
         ? '<p class="notice err">La clave de organizador no es válida.</p>'
@@ -421,29 +440,57 @@ function iniciarAdmin(clave) {
 
   function render() {
     $("count").innerHTML = `<span>${filas.length}</span> ${filas.length === 1 ? "familia inscrita" : "familias inscritas"}`;
-    if (!filas.length) { weeks.innerHTML = '<p class="empty">Todavía no hay familias inscritas. Cuando una familia escoja un horario aparecerá aquí.</p>'; return; }
-    weeks.innerHTML = `<div class="tablewrap"><table><thead><tr><th>Día</th><th>Hora</th><th>Familia</th><th></th></tr></thead><tbody></tbody></table></div>`;
-    const tb = weeks.querySelector("tbody");
-    for (const r of filas) {
-      const tr = document.createElement("tr");
-      const d = parse(r.fecha);
-      const cells = [fmt(d, { weekday: "short", day: "numeric", month: "short" }), rango(r.hora), r.familia];
-      for (const c of cells) { const td = document.createElement("td"); td.textContent = c; tr.appendChild(td); }
-      const td = document.createElement("td"); td.className = "del";
-      const b = document.createElement("button"); b.type = "button"; b.className = "mini"; b.textContent = "Quitar";
-      b.addEventListener("click", async () => {
-        if (b.dataset.confirm !== "1") { b.dataset.confirm = "1"; b.textContent = "¿Quitar?"; b.classList.add("danger"); return; }
-        b.disabled = true;
-        try { await rpc("agenda_admin_borrar", { p_clave: clave, p_id: r.id }); filas = filas.filter((x) => x.id !== r.id); render(); }
-        catch { b.disabled = false; b.textContent = "Error, reintentar"; }
-      });
-      td.appendChild(b); tr.appendChild(td); tb.appendChild(tr);
+    weeks.textContent = "";
+    const fechas = diasHabiles();
+    for (const [, sem] of porSemana(fechas)) {
+      const sec = document.createElement("section");
+      sec.className = "week";
+      const h3 = document.createElement("h3"); h3.textContent = tituloSemana(sem);
+      const grid = document.createElement("div"); grid.className = "days";
+      sec.append(h3, grid);
+      for (const f of sem) {
+        const delDia = filas.filter((r) => r.fecha === f);
+        const card = document.createElement("article"); card.className = "day";
+        const head = cabeceraDia(f);
+        const pill = head.querySelector(".pill");
+        pill.textContent = `${delDia.length} de ${CFG.espacios}`;
+        if (delDia.length >= CFG.espacios) pill.classList.add("full");
+        const ul = document.createElement("ol"); ul.className = "spots";
+        for (let p = 1; p <= CFG.espacios; p++) {
+          const r = delDia.find((x) => x.puesto === p);
+          const li = document.createElement("li"); li.className = "spot" + (r ? " taken" : "");
+          li.innerHTML = `<span class="n">${p}</span><span class="who"></span>`;
+          li.querySelector(".who").textContent = r ? r.familia : "Espacio libre";
+          if (r) {
+            const b = document.createElement("button"); b.type = "button"; b.className = "mini"; b.textContent = "Quitar";
+            b.addEventListener("click", async () => {
+              if (b.dataset.confirm !== "1") { b.dataset.confirm = "1"; b.textContent = "¿Quitar?"; b.classList.add("danger"); return; }
+              b.disabled = true;
+              try { await rpc("agenda_admin_borrar", { p_clave: clave, p_id: r.id }); filas = filas.filter((x) => x.id !== r.id); render(); }
+              catch { b.disabled = false; b.textContent = "Error"; }
+            });
+            li.appendChild(b);
+          }
+          ul.appendChild(li);
+        }
+        card.append(head, ul);
+        grid.appendChild(card);
+      }
+      weeks.appendChild(sec);
     }
   }
 
   $("reload").addEventListener("click", cargar);
   $("copy").addEventListener("click", async () => {
-    const txt = filas.map((r) => `• ${largo(r.fecha, r.hora)} — ${r.familia}`).join("\n") || "Sin inscritos";
+    const lineas = [];
+    for (const f of diasHabiles()) {
+      const delDia = filas.filter((r) => r.fecha === f);
+      if (!delDia.length) continue;
+      lineas.push(`*${largo(f)}* (${HORARIO})`);
+      for (const r of delDia) lineas.push(`${r.puesto}. ${r.familia}`);
+      lineas.push("");
+    }
+    const txt = lineas.join("\n").trim() || "Sin familias inscritas todavía";
     try { await navigator.clipboard.writeText(txt); $("amsg").textContent = "Lista copiada"; }
     catch { $("amsg").textContent = "No se pudo copiar"; }
   });
